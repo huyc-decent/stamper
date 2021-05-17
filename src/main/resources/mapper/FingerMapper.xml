@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.FingerMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Finger">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_by" property="deleteBy" jdbcType="INTEGER"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_name" property="deleteName" jdbcType="VARCHAR"/>
+        <result column="device_id" property="deviceId" jdbcType="INTEGER"/>
+        <result column="addr_num" property="addrNum" jdbcType="INTEGER"/>
+        <result column="code_id" property="codeId" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="remarks" property="remarks" jdbcType="VARCHAR"/>
+    </resultMap>
+    <!--查询指定指定印章+公司下的指纹列表-->
+    <select id="selectBySignetAndOrg" resultType="com.yunxi.stamper.entity.Finger">
+        SELECT
+        	f.*
+        FROM
+        	finger f
+        LEFT JOIN signet s ON f.device_id = s.id
+        WHERE
+        	f.delete_date IS NULL
+        AND s.delete_date IS NULL
+        AND f.device_id = #{param1}
+        AND s.org_id = #{param2}
+    </select>
+    <select id="selectAddrByDevice" resultType="java.lang.Integer">
+        SELECT
+        addr_num
+        FROM
+        finger
+        WHERE
+        delete_date IS NULL
+        AND device_id = #{_parameter}
+        ORDER BY
+        addr_num
+    </select>
+    <!--查询指定设备用户的指纹录入信息-->
+    <select id="selectByOrgAndDeviceAndUser" resultType="com.yunxi.stamper.entity.Finger">
+        SELECT
+        	*
+        FROM
+        	finger
+        WHERE
+        	delete_date IS NULL
+        AND device_id = #{param2}
+        AND user_id = #{param3}
+        LIMIT 1
+    </select>
+    <!--查询所有设备的指纹信息-->
+    <select id="selectAllByDevice" resultType="com.yunxi.stamper.entity.Finger">
+        SELECT
+        	*
+        FROM
+        	finger
+        WHERE
+        	delete_date IS NULL
+        AND device_id = #{_parameter}
+    </select>
+    <select id="selectByUserAndDevice" resultType="com.yunxi.stamper.entity.Finger">
+        SELECT
+        	*
+        FROM
+        	finger
+        WHERE
+        	delete_date IS NULL
+        AND user_id = #{param1}
+        AND device_id = #{param2}
+        ORDER BY
+        	create_date DESC
+        LIMIT 1
+    </select>
+</mapper>

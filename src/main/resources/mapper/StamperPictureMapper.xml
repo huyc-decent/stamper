@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.StamperPictureMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.StamperPicture">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="signet_id" property="signetId" jdbcType="INTEGER"/>
+        <result column="file_id" property="fileId" jdbcType="VARCHAR"/>
+        <result column="aes_file_id" property="aesFileId" jdbcType="VARCHAR"/>
+        <result column="file_name" property="fileName" jdbcType="VARCHAR"/>
+        <result column="hash" property="hash" jdbcType="VARCHAR"/>
+        <result column="file_url" property="fileUrl" jdbcType="VARCHAR"/>
+        <result column="bucket_name" property="bucketName" jdbcType="VARCHAR"/>
+        <result column="encryption_type" property="encryptionType" jdbcType="INTEGER"/>
+        <result column="secret_key" property="secretKey" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="file_url_expire_date" property="fileUrlExpireDate" jdbcType="TIMESTAMP"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="INTEGER"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectByDeviceAndFileName" resultType="com.yunxi.stamper.entity.StamperPicture">
+        SELECT
+        	*
+        FROM
+        	stamper_picture
+        WHERE
+        	delete_date IS NULL
+        AND signet_id = #{param1}
+        AND file_name = #{param2}
+        AND `type` = #{param3}
+        AND `hash` = #{param4}
+    </select>
+    <select id="selectByInfoIds" resultType="com.yunxi.stamper.entityVo.PictureFileInfo">
+        SELECT
+        sp.id pictureId,
+        sp.signet_id deviceId,
+        sp.info_id,
+        sp.type,
+        fi.id fileId,
+        fi.`host`,
+        fi.file_name,
+        fi.size,
+        fi.relative_path,
+        fi.secret_key,
+        fi.key_index,
+        fi.`status` fileType
+        FROM
+        stamper_picture sp
+        LEFT JOIN file_info fi ON sp.file_id = fi.id
+        WHERE
+        sp.delete_date IS NULL
+        AND fi.delete_date IS NULL
+        AND sp.info_id IN
+        <foreach collection="list" open="(" separator="," item="sealInfoId" close=")">
+            #{sealInfoId}
+        </foreach>
+    </select>
+</mapper>

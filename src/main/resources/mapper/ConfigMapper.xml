@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ConfigMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Config">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="uuid" property="uuid" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="qss_pin" property="qssPin" jdbcType="VARCHAR"/>
+        <result column="qss_qkud" property="qssQkud" jdbcType="VARCHAR"/>
+        <result column="qss_qssc" property="qssQssc" jdbcType="VARCHAR"/>
+        <result column="wifi_ssid" property="wifiSsid" jdbcType="VARCHAR"/>
+        <result column="wifi_pwd" property="wifiPwd" jdbcType="VARCHAR"/>
+        <result column="config_ip" property="configIp" jdbcType="VARCHAR"/>
+        <result column="svr_host" property="svrHost" jdbcType="VARCHAR"/>
+        <result column="svr_ip" property="svrIp" jdbcType="VARCHAR"/>
+        <result column="version" property="version" jdbcType="VARCHAR"/>
+        <result column="apk_name" property="apkName" jdbcType="VARCHAR"/>
+        <result column="version_url" property="versionUrl" jdbcType="VARCHAR"/>
+        <result column="is_oos" property="isOos" jdbcType="INTEGER"/>
+        <result column="firmware_ver" property="firmwareVer" jdbcType="DOUBLE" />
+        <result column="firmware_url" property="firmwareUrl" jdbcType="VARCHAR" />
+        <result column="firmware_remark" property="firmwareRemark" jdbcType="VARCHAR" />
+        <result column="firmware_hash" property="firmwareHash" jdbcType="VARCHAR" />
+        <result column="is_oos" property="isOos" jdbcType="INTEGER"/>
+        <result column="is_enable_application" property="isEnableApplication" jdbcType="INTEGER"/>
+        <result column="is_production_test" property="isProductionTest" jdbcType="INTEGER"/>
+        <result column="sn" property="sn" jdbcType="VARCHAR" />
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectByKeyword" resultType="com.yunxi.stamper.entityVo.ConfigVo">
+        (SELECT
+        c.*,
+        s.camera,
+        s.`create_date` AS birthdayTime,
+        s.`name` AS deviceName ,
+        s.uuid AS deviceUUID ,
+        s.id AS deviceId,
+        s.iccid as iccid,
+        s.body_id as bodyId,
+        a.location AS location,
+        s.org_name AS orgName
+        FROM
+        signet s
+        LEFT JOIN config c ON s.uuid = c.uuid
+        LEFT JOIN addr a ON a.id = s.addr
+        WHERE
+        s.delete_date IS NULL
+        <if test="param1!=null and param1!=''">
+            <bind name="param1" value="'%' + param1 + '%'" />
+            AND (
+            s.id LIKE #{param1}
+            OR s.uuid LIKE #{param1}
+            OR s.`name` LIKE #{param1}
+            OR s.remark LIKE #{param1}
+            OR s.iccid LIKE #{param1}
+            OR s.body_id LIKE #{param1}
+            OR c.uuid LIKE #{param1}
+            OR s.org_name LIKE #{param1}
+            OR a.location LIKE #{param1}
+            )
+        </if>
+        <if test="param2!=null">
+            AND s.id IN
+            <foreach collection="param2" separator="," close=")" item="deviceId" open="(">
+                #{deviceId}
+            </foreach>
+        </if>
+        ORDER BY s.id)
+        <if test="param2!=null">
+            UNION
+            (SELECT
+            c.*,
+            s.camera,
+            s.`create_date` AS birthdayTime,
+            s.`name` AS deviceName ,
+            s.uuid AS deviceUUID ,
+            s.id AS deviceId,
+            s.iccid as iccid,
+            s.body_id as bodyId,
+            a.location AS location,
+            s.org_name AS orgName
+            FROM
+            signet s
+            LEFT JOIN config c ON s.uuid = c.uuid
+            LEFT JOIN addr a ON a.id = s.addr
+            WHERE
+            s.delete_date IS NULL
+            <if test="param1!=null and param1!=''">
+                <bind name="param1" value="'%' + param1 + '%'" />
+                AND (
+                s.id LIKE #{param1}
+                OR s.uuid LIKE #{param1}
+                OR s.`name` LIKE #{param1}
+                OR s.remark LIKE #{param1}
+                OR s.iccid LIKE #{param1}
+                OR s.body_id LIKE #{param1}
+                OR c.uuid LIKE #{param1}
+                OR s.org_name LIKE #{param1}
+                OR a.location LIKE #{param1}
+                )
+            </if>
+            AND s.id NOT IN
+            <foreach collection="param2" separator="," close=")" item="deviceId" open="(">
+                #{deviceId}
+            </foreach>
+            ORDER BY s.id)
+        </if>
+    </select>
+    <select id="selectByOrgAndKeyword" resultType="com.yunxi.stamper.entityVo.UserConfig">
+        SELECT
+        s.id AS deviceId,
+        s.`name` AS deviceName,
+        s.uuid AS deviceUuid,
+        s.iccid AS deviceIccid,
+        c.version AS deviceVersion,
+        c.svr_host AS svrHost,
+        c.svr_ip AS svrIp,
+        c.wifi_ssid AS wifiSsid,
+        c.wifi_pwd AS wifiPwd
+        FROM
+        signet s
+        LEFT JOIN config c ON s.uuid = c.uuid
+        WHERE
+        s.delete_date IS NULL
+        AND s.org_id = #{param1}
+        <if test="param2!=null and param2!=''">
+            <bind name="param2" value="'%' + param2 + '%'" />
+            AND (
+            s.`name` LIKE #{param2}
+            OR s.id LIKE #{param2}
+            OR s.uuid LIKE #{param2}
+            )
+        </if>
+    </select>
+
+    <!--批量更新-->
+    <update id="updateBatch" parameterType="java.util.List">
+        update config
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="config_ip =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                   when id=#{item.id} then #{item.configIp}
+                </foreach>
+            </trim>
+
+            <trim prefix="svr_ip =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.svrIp}
+                </foreach>
+            </trim>
+
+            <trim prefix="svr_host =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.svrHost}
+                </foreach>
+            </trim>
+
+            <trim prefix="qss_pin =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.qssPin}
+                </foreach>
+            </trim>
+
+            <trim prefix="qss_qkud =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.qssQkud}
+                </foreach>
+            </trim>
+
+            <trim prefix="qss_qssc =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.qssQssc}
+                </foreach>
+            </trim>
+
+            <trim prefix="wifi_ssid =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.wifiSsid}
+                </foreach>
+            </trim>
+
+
+            <trim prefix="wifi_pwd =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.wifiPwd}
+                </foreach>
+            </trim>
+
+            <trim prefix="status =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.status}
+                </foreach>
+            </trim>
+
+            <trim prefix="firmware_ver =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.firmwareVer}
+                </foreach>
+            </trim>
+
+            <trim prefix="update_date =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.updateDate}
+                </foreach>
+            </trim>
+
+        </trim>
+        where id in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.id,jdbcType=INTEGER}
+        </foreach>
+    </update>
+</mapper>

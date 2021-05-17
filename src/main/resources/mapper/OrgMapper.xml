@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.OrgMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Org">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="logo" property="logo" jdbcType="VARCHAR"/>
+        <result column="location" property="location" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="org_type" property="orgType" jdbcType="INTEGER"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="position_id" property="positionId" jdbcType="INTEGER"/>
+        <result column="manager_user_id" property="managerUserId" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectByAll" resultType="com.yunxi.stamper.entityVo.OrgServeVo">
+    SELECT
+      *
+    FROM
+      org
+    WHERE
+      delete_date IS NULL
+    </select>
+    <!--查询该手机号所属的组织列表-->
+    <select id="selectOrgsByPhone" resultType="com.yunxi.stamper.entity.Org">
+        SELECT
+        	o.id,
+        	o.`name`
+        FROM
+        	org o
+        LEFT JOIN `user` u ON u.org_id = o.id
+        LEFT JOIN sys_user su ON u.sys_user_id = su.id
+        WHERE
+        	u.delete_date IS NULL
+        AND o.delete_date IS NULL
+        AND su.phone = #{_parameter}
+    </select>
+    <select id="selectRoot" resultType="com.yunxi.stamper.entity.Department">
+        SELECT
+        	d.*
+        FROM
+        	org o
+        RIGHT JOIN department d ON o.id = d.org_id
+        WHERE
+        	o.delete_date IS NULL
+        AND d.delete_date IS NULL
+        AND d.parent_id is NULL
+        AND o.id = #{_parameter}
+        AND d.type = 2
+    </select>
+</mapper>

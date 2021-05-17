@@ -1,0 +1,177 @@
+#####<<<<<<<<<<<<<<<<<<<本地测试配置文件>>>>>>>>>>>>>>>>>>>>>>>
+server:
+  port: 8081
+  tomcat:
+    max-http-header-size: -1 #不限制
+    max-http-post-size: -1 #不限制
+    uri-encoding: UTF-8
+spring:
+  profiles:
+    include: xss
+  http:
+    encoding:
+      charset: UTF-8
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    # 本地服务器
+    url: jdbc:mysql://localhost:3306/stamper_web_20201230?characterEncoding=utf-8&useUnicode=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useAffectRows=true&useSSL=false
+    password: root
+    username: root
+  redis:
+    timeout: 60s
+    port: 6379
+    host: localhost
+    jedis:
+      pool:
+        min-idle: 0
+        max-idle: 8
+        max-wait: -1
+        max-active: 8
+    password:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+##<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<通用配置文件>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  #返回值json全局配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss  #日期格式化
+    time-zone: GMT+8 # 日期时区
+    default-property-inclusion: NON_NULL  #返回null不显示
+  servlet:
+    multipart:
+      location: ${user.home}
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      resolve-lazily: true
+
+
+##tryLock
+redisson:
+  client-name: ${random.value}
+  single-server-config:
+    address: 127.0.0.1:6379
+    database: 3
+    connection-pool-size: 10
+    connection-minimum-idle-size: 2
+
+
+pagehelper:
+    helperDialect: mysql
+    reasonable: false
+    supportMethodsArguments: true
+    pageSizeZero: true
+    params: count=countSql
+logging:
+  level:
+    com.yunxi.stamper.base.*: debug
+    com.yunxi.stamper.commons.*: debug
+    com.yunxi.stamper.controller.*: debug
+    com.yunxi.stamper.demoController.*: debug
+    com.yunxi.stamper.entity.*: debug
+    com.yunxi.stamper.entityVo.*: debug
+    com.yunxi.stamper.logger.*: debug
+    com.yunxi.stamper.service.*: debug
+    com.yunxi.stamper.sys.*: debug
+    com.yunxi.stamper.websocket.*: debug
+    com.yunxi.stamper.quantum.*: debug
+    com.yunxi.stamper.mapper.*: error
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true  #开启驼峰
+
+
+##项目自定义配置文件 详细参数描述见 com.yunxi.stamper.sys.config.ProjectPropertiesies
+project:
+  default-pwd: 123456
+  insertLogger: false   #是否监听用户操作日志
+  push: true             #个推
+  logPath: D:\logs          #日志文件存储路径
+  # 阿里云短信配置
+  aliyun-sms:
+    enabled: false  #是否使用短信服务
+    reissued-enabled: false  #是否补发短信
+    verify-total: 10  #短信验证码发送频率 数量/用户/天
+    access-key-id: LTAIhb8W3FQHxYK1
+    access-key-secret: q1Hqv2NvdExlsG9uIhuV4PgY23qDZW
+    sign-name: 互联云玺
+  #<<<<<<<<<<<<<<<<<<<文件相关配置>>>>>>>>>>>>>>>>>>
+  file:
+    filePath: D:\upload
+    protocol: http
+    host: localhost
+    port: 9000
+    minute: 100             #文件上传频率,单位：次/人/分钟
+    maxSize: 52428800       #50M  1024 * 1024 * 50
+  reduceFile:
+    enabled: false
+  rabbitMq:
+    exchangeOrder: exchange_signet
+    queueOrder: queue_signet_${random.value}
+    queueLogs: system.logs.${random.value}
+    exchangeLogs: exchange_account_logs
+    queueDemo: qss.signet.${random.value}
+    exchangeDemo: exchange_qss
+  logger:
+    exchange: exchange_logger
+    queue: queue_logger_${random.value}
+    record: true
+  jwt:
+    ignore:
+      - /auth/user/loginV1
+      - /auth/user/loginV2
+      - /auth/user/reg
+      - /auth/org/reg
+      - /auth/org/regV2
+      - /auth/user/logout
+      - /auth/org/dir
+      - /auth/strategypassword/getTipsByCode
+      - /auth/appVersion/checkVersion
+      - /auth/appRotationImg/getList
+      - /auth/qss/getByArray
+      - /auth/user/resetPwd
+      - /auth/user/changePasswordV2
+      - /auth/user/changePasswordV1
+      - /auth/user/validatePath
+      - /auth/user/getPhoneCode
+      - /auth/user/getJPGCode
+      - /auth/user/getGifCode
+      - /auth/org/getAllOrgsByReg
+      - /auth/chatting
+      - /auth/org/getOrgsByPhone
+      - /device/ws
+      - /device/config/updateAPK
+      - /device/bpm/websocket/1
+      - /device/config/getConfigByUUID
+      - /device/sealRecordInfo/addEasyInfo
+      - /device/sealRecordInfo/addAuditInfo
+      - /device/sealRecordInfo/addNormalInfo
+      - /device/sealRecordInfo/addInfo
+      - /device/config/addConfigError
+      - /device/deviceCallBack/res
+      - /file/fileInfo/uploadFile
+      - /file/ws
+      - /device/seal_record_info/*
+      - /file/fileInfo/downloadFile/*
+      - /file/fileInfo/readFile
+      - /qss/ws
+      - /gkQss/initKey
+      - /gkQss/transCryption
+      - /gkQss/transCryption1
+      - /auth/notice/getDisassemblyRecordInfoList
+      - /key/randomPubKey
+      - /wechat/control/verify
+      #swagger-ui相关接口
+      - /swagger-ui.html
+      - /v2/api-docs
+      - /csrf
+      - /swagger-resources
+      - /webjars/springfox-swagger-ui/*
+      - /swagger-resources/*
+      - /*/test
+      - /test/*

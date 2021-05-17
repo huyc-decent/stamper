@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.OrgSmsTempMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.OrgSmsTemp" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <result column="sms_temp_id" property="smsTempId" jdbcType="INTEGER" />
+    <result column="org_id" property="orgId" jdbcType="INTEGER" />
+  </resultMap>
+  <!--查询该公司启用中的短信模板id列表-->
+    <select id="selectSmsTempIdByOrg" resultType="java.lang.Integer">
+            SELECT
+            	sms_temp_id
+            FROM
+            	org_sms_temp
+            WHERE
+            	org_id = #{_parameter}
+    </select>
+</mapper>

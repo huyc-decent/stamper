@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.User">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="sys_user_id" property="sysUserId" jdbcType="INTEGER"/>
+        <result column="login_name" property="loginName" jdbcType="VARCHAR"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="department_id" property="departmentId" jdbcType="INTEGER"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="head_img" property="headImg" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectByOrgAndPerms" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        DISTINCT u.id,u.user_name
+        FROM
+        `user` u
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role_perms rp ON ur.role_id = rp.role_id
+        LEFT JOIN perms p ON rp.perms_id = p.id
+        WHERE
+        u.delete_date IS NULL
+        AND p.delete_date IS NULL
+        AND u.org_id = #{param1}
+        AND p.`code` = #{param2}
+        AND u.type != 3
+        AND u.`status` = 0
+    </select>
+    <select id="selectByOrgId" resultType="com.yunxi.stamper.entityVo.UserVo">
+        SELECT
+        *
+        FROM
+        `user`
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{_parameter}
+    </select>
+    <!--查询该公司拥有管理员权限的用户列表-->
+    <select id="selectByOrgAndRole" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        u.*
+        FROM
+        `user` u
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role r ON ur.role_id = r.id
+        WHERE
+        u.org_id = #{param1}
+        AND r.`code` = #{param2}
+        AND u.delete_date IS NULL
+        AND r.delete_date IS NULL
+    </select>
+    <select id="getEmpList" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        id,user_name
+        FROM
+        user
+        WHERE
+        delete_date IS NULL
+        AND `status`=0
+        AND org_id = #{param1}
+    </select>
+    <!--查询指定组织、手机号码的用户信息-->
+    <select id="selectByOrgAndPhone" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        u.*
+        FROM
+        `user` u
+        LEFT JOIN sys_user su ON u.sys_user_id = su.id
+        WHERE
+        u.delete_date IS NULL
+        AND su.delete_date IS NULL
+        AND u.org_id = #{param1}
+        AND su.phone = #{param2}
+        LIMIT 1
+    </select>
+    <!--查询指定组织下的的用户ID列表-->
+    <select id="selectIdsByDepartmentIds" resultType="java.lang.Integer">
+        SELECT
+        DISTINCT u.id
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        WHERE
+        u.delete_date IS NULL
+        AND rdu.department_id IN
+        <foreach collection="list" open="(" separator="," close=")" item="departmentId">
+            #{departmentId}
+        </foreach>
+        ORDER BY
+        u.create_date
+    </select>
+    <!--查询指定集团ID下的员工ID列表-->
+    <select id="selectIdsByOrg" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        `user`
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{_parameter}
+    </select>
+    <!--查询员工列表-->
+    <select id="selectEmployeesByKeyword" resultType="com.yunxi.stamper.entityVo.Employee">
+        SELECT
+        u.id,
+        su.phone,
+        u.user_name,
+        u.create_date,
+        u.`status`,
+        u.`type`,
+        u.remark,
+        GROUP_CONCAT(DISTINCT r.`name`) AS `roleNames`,
+        GROUP_CONCAT(DISTINCT r.id) AS `roleIds`
+        FROM
+        `user` u
+        LEFT JOIN sys_user su ON su.id = u.sys_user_id
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        LEFT JOIN role r ON ur.role_id = r.id
+        WHERE
+        u.delete_date IS NULL
+        AND su.delete_date IS NULL
+        AND u.org_id = #{param1}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND (u.user_name LIKE #{param3} OR su.phone LIKE #{param3})
+        </if>
+        <if test="param2!=null and param2.size>0">
+            AND rdu.department_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        GROUP BY u.id
+        ORDER BY u.create_date
+    </select>
+    <!--查询指定组织列表下的员工信息-->
+    <select id="selectByDepartmentIds" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        DISTINCT u.*
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        WHERE
+        u.delete_date IS NULL
+        AND rdu.department_id IN
+        <foreach collection="list" open="(" separator="," close=")" item="departmentId">
+            #{departmentId}
+        </foreach>
+        ORDER BY
+        u.create_date
+    </select>
+    <!--查询指定用户拥有的集团ID列表-->
+    <select id="selectOrgIdsBySysUserId" resultType="java.lang.Integer">
+        SELECT
+        org_id
+        FROM
+        `user`
+        WHERE
+        delete_date IS NULL
+        AND sys_user_id = #{_parameter}
+    </select>
+    <!--查询指定组织列表下的员工ID列表-->
+    <select id="selectUserIdsByDepartmentIds" resultType="java.lang.Integer">
+        SELECT
+        DISTINCT user_id
+        FROM
+        relate_department_user
+        WHERE
+        department_id IN
+        <foreach collection="list" open="(" separator="," close=")" item="departmentId">
+            #{departmentId}
+        </foreach>
+    </select>
+    <!--查询指定集团下、指定组织列表下的员工列表-->
+    <select id="selectEmployeeForManagerByDepartments" resultType="com.yunxi.stamper.entity.User">
+        SELECT DISTINCT
+        u.id,
+        u.user_name
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        WHERE
+        u.delete_date IS NULL
+        AND u.org_id = #{param1}
+        AND rdu.department_id IN
+        <foreach collection="param2" open="(" separator="," close=")" item="departmentId">
+            #{departmentId}
+        </foreach>
+    </select>
+    <!--查询指定集团下、指定组织下、指定关键词的员工列表-->
+    <select id="selectManagersByOrgAndParentAndKeyword"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT
+        id AS 'key',
+        user_name AS 'label'
+        FROM
+        `user`
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND user_name LIKE #{param3}
+        </if>
+        <if test="param2==null">
+            AND id NOT IN (
+            SELECT
+            rdu.user_id
+            FROM
+            relate_department_user rdu
+            LEFT JOIN `user` u ON u.id = rdu.user_id
+            WHERE
+            u.delete_date IS NULL
+            AND u.org_id = #{param1}
+            )
+        </if>
+        <if test="param2!=null">
+            AND id IN (
+            SELECT
+            user_id
+            FROM
+            relate_department_user
+            WHERE
+            department_id = #{param2}
+            )
+        </if>
+    </select>
+    <!--查询指定账号ID、指定集团的用户信息-->
+    <select id="selectBySysUserAndOrg" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        *
+        FROM
+        `user`
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param2}
+        AND sys_user_id = #{param1}
+        LIMIT 1
+    </select>
+    <!--查询组织下的审批人列表-->
+    <select id="selectEmployeesByOrgAndDepartment"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT DISTINCT
+        u.id AS `key`,
+        u.user_name AS `label`
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        LEFT JOIN role_perms rp ON ur.role_id = rp.role_id
+        WHERE
+        u.delete_date IS NULL
+        AND u.org_id = #{param1}
+        AND rp.perms_id = 22
+        <if test="param2!=null">
+            AND rdu.department_id = #{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND u.user_name LIKE #{param3}
+        </if>
+    </select>
+    <!--查询组织下审批人列表，用于添加审批流程-->
+    <select id="selectManagersByOrgAndParentAndKeywordToAddFlow"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT
+        DISTINCT u.id AS `key`,
+        u.user_name AS `label`
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        LEFT JOIN role_perms rp ON ur.role_id = rp.role_id
+        WHERE
+        u.delete_date IS NULL
+        AND u.org_id = #{param1}
+        AND rp.perms_id = 22
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND u.user_name LIKE #{param3}
+        </if>
+        AND rdu.department_id IN
+        <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+    </select>
+    <!--查询集团下员工列表-->
+    <select id="selectUsersByOrgAndDepartmentAndUserName" resultType="com.yunxi.stamper.entityVo.FingerEntity">
+        SELECT
+        u.id AS `userId`,
+        u.user_name,
+        su.phone,
+        u.create_date,
+        (SELECT
+        GROUP_CONCAT(DISTINCT d.`name`)
+        FROM
+        department d
+        LEFT JOIN relate_department_user rdu2 ON d.id = rdu2.department_id
+        WHERE
+        d.delete_date IS NULL
+        AND rdu2.user_id = u.id) AS `departmentNames`
+
+        FROM
+        `user` u
+        LEFT JOIN sys_user su ON u.sys_user_id = su.id
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        WHERE
+        u.delete_date IS NULL
+        AND u.org_id = #{param1}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND (u.user_name LIKE #{param3} OR su.phone LIKE #{param3})
+        </if>
+        AND rdu.department_id IN
+        <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+        GROUP BY u.id
+    </select>
+    <!--查询用户是否拥有指定权限-->
+    <select id="selectByOrgAndUserAndPerms" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        perms p
+        LEFT JOIN role_perms rp ON p.id = rp.perms_id
+        LEFT JOIN user_role ur ON ur.role_id = rp.role_id
+        WHERE
+        ur.user_id = #{param1}
+        AND p.id = #{param2}
+    </select>
+    <!--查询指定组织列表下的'印章管理员'列表-->
+    <select id="selectKeeperByOrgAndDepartment" resultType="com.yunxi.stamper.entity.User">
+        SELECT DISTINCT
+        u.id,
+        u.user_name
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role_perms rp ON rp.role_id = ur.role_id
+        WHERE
+        u.delete_date IS NULL
+        AND rp.perms_id = 23
+        AND u.org_id = #{param1}
+        AND rdu.department_id IN
+        <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+    </select>
+    <!--查询指定组织列表下的'印章审计员'列表-->
+    <select id="selectAuditorByOrgAndDepartment" resultType="com.yunxi.stamper.entity.User">
+        SELECT DISTINCT
+        u.id,
+        u.user_name
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role_perms rp ON rp.role_id = ur.role_id
+        WHERE
+        u.delete_date IS NULL
+        AND rp.perms_id = 24
+        AND u.org_id = #{param1}
+        AND rdu.department_id IN
+        <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+    </select>
+    <!--查询指定组织下的员工列表-->
+    <select id="selectManagersByOrgAndDepartmentsAndKeyword"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT DISTINCT
+        u.id AS `key`,
+        u.user_name AS label
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role_perms rp ON rp.role_id = ur.role_id
+        WHERE
+        u.delete_date IS NULL
+        AND u.org_id = #{param1}
+        AND rp.perms_id = 22
+        <if test="param2!=null and param2!=''">
+            <bind name="param2" value="'%' + param2 + '%'" />
+            AND u.user_name LIKE #{param2}
+        </if>
+        <if test="param3!=null">
+            AND rdu.department_id = #{param3}
+        </if>
+        <if test="param4!=null and param4.size>0">
+            AND rdu.department_id IN
+            <foreach collection="param4" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectPreLoginAccount" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        u.*
+        FROM
+        `user` u
+        LEFT JOIN sys_user su ON u.sys_user_id = su.id
+        WHERE
+        su.delete_date IS NULL
+        AND su.id = #{_parameter}
+        AND u.delete_date IS NULL
+        AND u.`status` != 1
+        AND u.`type` != 3
+        ORDER BY
+        su.default_org_id
+        LIMIT 1
+    </select>
+    <select id="selectByOrgAndDepartment" resultType="com.yunxi.stamper.entity.User">
+        SELECT
+        u.*
+        FROM
+        `user` u
+        LEFT JOIN relate_department_user rdu ON u.id = rdu.user_id
+        WHERE
+        u.delete_date IS NULL
+        AND u.org_id = #{param1}
+        <if test="param2!=null and param2.size > 0">
+            AND rdu.department_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        GROUP BY u.id
+    </select>
+</mapper>

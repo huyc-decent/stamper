@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.SignetMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Signet">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="org_name" property="orgName" jdbcType="VARCHAR"/>
+        <result column="department_id" property="departmentId" jdbcType="INTEGER"/>
+        <result column="department_name" property="departmentName" jdbcType="VARCHAR"/>
+        <result column="meter_id" property="meterId" jdbcType="INTEGER"/>
+        <result column="keeper_id" property="keeperId" jdbcType="INTEGER"/>
+        <result column="keeper_name" property="keeperName" jdbcType="VARCHAR"/>
+        <result column="auditor_id" property="auditorId" jdbcType="INTEGER"/>
+        <result column="auditor_name" property="auditorName" jdbcType="VARCHAR"/>
+        <result column="type_id" property="typeId" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="count" property="count" jdbcType="INTEGER"/>
+        <result column="logo" property="logo" jdbcType="VARCHAR"/>
+        <result column="uuid" property="uuid" jdbcType="VARCHAR"/>
+        <result column="sim_num" property="simNum" jdbcType="VARCHAR"/>
+        <result column="ver" property="ver" jdbcType="INTEGER"/>
+        <result column="iccid" property="iccid" jdbcType="VARCHAR"/>
+        <result column="body_id" property="bodyId" jdbcType="VARCHAR"/>
+        <result column="imsi" property="imsi" jdbcType="VARCHAR"/>
+        <result column="addr" property="addr" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="network" property="network" jdbcType="VARCHAR"/>
+        <result column="sleep_time" property="sleepTime" jdbcType="INTEGER"/>
+        <result column="finger_pattern" property="fingerPattern" jdbcType="BIT"/>
+        <result column="camera" property="camera" jdbcType="INTEGER"/>
+        <result column="sn" property="sn" jdbcType="VARCHAR"/>
+        <result column="is_enable_application" property="isEnableApplication" jdbcType="INTEGER"/>
+
+    </resultMap>
+    <!--查询指定公司所有印章位置信息-->
+    <select id="selectLocationByOrg" resultType="com.yunxi.stamper.entityVo.Location">
+        SELECT
+        s.`name` as deviceName,
+        s.id as deviceId,
+        a.location as addr,
+        a.longitude,
+        a.latitude
+        FROM
+        signet s
+        LEFT JOIN addr a ON s.addr = a.id
+        WHERE
+        s.delete_date IS NULL
+        AND a.delete_date IS NULL
+        AND s.org_id = #{_parameter}
+    </select>
+    <!--手机APP搜索印章列表-->
+    <select id="selectByType" resultType="java.util.Map">
+        SELECT
+        s.id,
+        s.keeper_id,
+        u.user_name AS keeperName,
+        IFNULL(s.`status`, 0) AS `status`,
+        s.`name`,
+        s.logo
+        FROM
+        signet s
+        LEFT JOIN `user` u ON s.keeper_id = u.id
+        WHERE
+        s.delete_date IS NULL
+        AND s.org_id = #{param1}
+        <if test="param2!=null">
+            AND s.type_id = #{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'"/>
+            AND (s.keeper_name LIKE #{param3} OR u.user_name LIKE #{param3})
+        </if>
+        <if test="param4!=null and param4!=''">
+            <bind name="param4" value="'%' + param4 + '%'"/>
+            AND s.`name` LIKE #{param4}
+        </if>
+        <if test="param5!=null and param5.size > 0">
+            AND s.department_id IN
+            <foreach collection="param5" close=")" item="departmentId" open="(" separator=",">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param6!=null">
+            AND s.keeper_id = #{param6}
+        </if>
+        GROUP BY s.id
+        ORDER BY
+        s.create_date DESC
+    </select>
+    <!--查询搜索印章列表-->
+    <select id="selectByOwner" resultType="com.yunxi.stamper.entityVo.SignetEntity">
+        SELECT
+        s.id,
+        s.`name`,
+        s.camera,
+        s.`status`,
+        s.is_enable_application,
+        IFNULL(s.`transfer_time`, s.`create_date`) AS `create_date`,
+        s.type_id,
+        dt.`name` AS typeName,
+        s.count,
+        s.network,
+        a.location,
+        s.sleep_time,
+        s.finger_pattern
+        FROM
+        signet s
+        LEFT JOIN device_type dt ON s.type_id = dt.id
+        LEFT JOIN addr a ON s.addr = a.id
+        WHERE
+        s.delete_date IS NULL
+        AND s.org_id = #{param1}
+        <if test="param2!=null">
+            AND s.keeper_id = #{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'"/>
+            AND (
+            s.`name` LIKE #{param3}
+            OR s.id LIKE #{param3}
+            )
+        </if>
+        <if test="param4!=null and param4.size>0">
+            AND s.department_id IN
+            <foreach collection="param4" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        GROUP BY s.id
+        order by s.id
+    </select>
+    <!--查询集团、指定组织列表下的印章列表信息-->
+    <select id="selectSignetByOrgAndDepartments" resultType="com.yunxi.stamper.entity.Signet">
+        SELECT
+        id,`name`
+        FROM
+        signet
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND (
+        keeper_id = #{param3}
+        <if test="param2!=null and param2.size>0">
+            OR department_id IN
+            <foreach collection="param2" open="(" separator="," close=")" item="departmentId">
+                #{departmentId}
+            </foreach>
+        </if>
+        )
+    </select>
+    <!--查询集团印章列表-->
+    <select id="selectByOrg" resultType="com.yunxi.stamper.entity.Signet">
+        SELECT
+        *
+        FROM
+        signet
+        WHERE
+        org_id = #{_parameter}
+        AND delete_date IS NULL
+    </select>
+    <select id="selectByOwnerAndOnlie" resultType="com.yunxi.stamper.entityVo.SignetEntity">
+        (
+        SELECT
+        s.id,
+        s.`name`,
+        s.camera,
+        s.`status`,
+        s.is_enable_application,
+        IFNULL(s.`transfer_time`, s.`create_date`) AS `create_date`,
+        s.type_id,
+        dt.`name` AS typeName,
+        s.count,
+        s.network,
+        a.location,
+        s.sleep_time,
+        s.finger_pattern
+        FROM
+        signet s
+        LEFT JOIN device_type dt ON s.type_id = dt.id
+        LEFT JOIN addr a ON s.addr = a.id
+        WHERE
+        s.delete_date IS NULL
+        AND s.org_id = #{param1}
+        <if test="param2!=null">
+            AND s.keeper_id = #{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'"/>
+            AND (
+            s.`name` LIKE #{param3}
+            OR s.id LIKE #{param3}
+            )
+        </if>
+        <if test="param4!=null and param4.size>0">
+            AND s.department_id IN
+            <foreach collection="param4" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        AND s.id IN
+        <foreach collection="param5" separator="," close=")" item="deviceId" open="(">
+            #{deviceId}
+        </foreach>
+        GROUP BY s.id
+        order by s.id
+        )
+        UNION
+        (
+        SELECT
+        s.id,
+        s.`name`,
+        s.camera,
+        s.`status`,
+        s.is_enable_application,
+        s.create_date,
+        s.type_id,
+        dt.`name` AS typeName,
+        s.count,
+        s.network,
+        a.location,
+        s.sleep_time,
+        s.finger_pattern
+        FROM
+        signet s
+        LEFT JOIN device_type dt ON s.type_id = dt.id
+        LEFT JOIN addr a ON s.addr = a.id
+        WHERE
+        s.delete_date IS NULL
+        AND s.org_id = #{param1}
+        <if test="param2!=null">
+            AND s.keeper_id = #{param2}
+        </if>
+        <if test="param4!=null and param4.size>0">
+            AND s.department_id IN
+            <foreach collection="param4" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'"/>
+            AND (
+            s.`name` LIKE #{param3}
+            OR s.id LIKE #{param3}
+            )
+        </if>
+        AND s.id NOT IN
+        <foreach collection="param5" separator="," close=")" item="deviceId" open="(">
+            #{deviceId}
+        </foreach>
+        GROUP BY s.id
+        order by s.id
+        )
+    </select>
+    <!--查询印章总数量-->
+    <select id="selectCountByOrgAndDepartment" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        signet
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null and param2.size>0">
+            AND department_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+    </select>
+    <!--查询印章ID列表-->
+    <select id="selectIdByOrgAndDepartment" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        signet
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null and param2.size>0">
+            AND department_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+    </select>
+    <select id="find" resultType="com.yunxi.stamper.entity.Signet">
+        (
+        SELECT * FROM signet
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2 != null">
+            AND keeper_id = #{param2}
+        </if>
+        <if test="param5 !=null and param5 != ''">
+            <bind name="param5" value="'%' + param5 + '%'"/>
+            AND (`name` LIKE #{param5} OR id LIKE #{param5})
+        </if>
+        <if test="param3 != null and param3.size > 0">
+            AND department_id IN
+            <foreach collection="param3" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param4 != null and param4.size > 0">
+            AND id IN
+            <foreach collection="param4" separator="," close=")" item="deviceId" open="(">
+                #{deviceId}
+            </foreach>
+        </if>
+        ORDER BY id
+        )
+        UNION
+        (
+        SELECT * FROM signet
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2 != null">
+            AND keeper_id = #{param2}
+        </if>
+        <if test="param5 !=null and param5 != ''">
+            <bind name="param5" value="'%' + param5 + '%'"/>
+            AND (`name` LIKE #{param5} OR id LIKE #{param5})
+        </if>
+        <if test="param3 != null and param3.size > 0">
+            AND department_id IN
+            <foreach collection="param3" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param4 != null and param4.size > 0">
+            AND id NOT IN
+            <foreach collection="param4" separator="," close=")" item="deviceId" open="(">
+                #{deviceId}
+            </foreach>
+        </if>
+        ORDER BY id
+        )
+    </select>
+
+    <!--批量更新-->
+    <update id="updateBatch" parameterType="java.util.List">
+        update signet
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="name =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.name !=null and item.name != ''">
+                        when id=#{item.id} then #{item.name}
+                    </if>
+                    <if test="item.name == null or item.name == ''">
+                        when id=#{item.id} then signet.name
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="network =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.network}
+                </foreach>
+            </trim>
+
+            <trim prefix="body_id =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.bodyId !=null and item.bodyId != ''">
+                        when id=#{item.id} then #{item.bodyId}
+                    </if>
+                    <if test="item.bodyId == null or item.bodyId == ''">
+                        when id=#{item.id} then signet.body_id
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="update_date =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    when id=#{item.id} then #{item.updateDate}
+                </foreach>
+            </trim>
+
+        </trim>
+        where id in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.id,jdbcType=INTEGER}
+        </foreach>
+    </update>
+</mapper>

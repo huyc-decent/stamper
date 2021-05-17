@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.MessageTempMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.MessageTemp" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="title" property="title" jdbcType="VARCHAR" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="code" property="code" jdbcType="VARCHAR" />
+    <result column="sms_temp_id" property="smsTempId" jdbcType="INTEGER" />
+    <result column="notice_temp_id" property="noticeTempId" jdbcType="INTEGER" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+    <select id="selectByAll" resultType="com.yunxi.stamper.entityVo.MessageTempVo">
+        SELECT
+        	*
+        FROM
+        	message_temp
+        WHERE
+        	delete_date IS NULL
+    </select>
+</mapper>

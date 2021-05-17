@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ConfigErrorMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.ConfigError" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="uuid" property="uuid" jdbcType="VARCHAR" />
+    <result column="error" property="error" jdbcType="VARCHAR" />
+    <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+    <result column="relative_path" property="relativePath" jdbcType="VARCHAR" />
+    <result column="absolute_path" property="absolutePath" jdbcType="VARCHAR" />
+    <result column="host" property="host" jdbcType="VARCHAR" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+</mapper>

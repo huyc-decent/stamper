@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.SmsMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Sms" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="title" property="title" jdbcType="VARCHAR" />
+    <result column="content" property="content" jdbcType="VARCHAR" />
+    <result column="sms_code" property="smsCode" jdbcType="VARCHAR" />
+    <result column="sms_args" property="smsArgs" jdbcType="VARCHAR" />
+    <result column="receive_id" property="receiveId" jdbcType="INTEGER" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="times" property="times" jdbcType="INTEGER" />
+    <result column="plan_time" property="planTime" jdbcType="TIMESTAMP" />
+    <result column="error" property="error" jdbcType="VARCHAR" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <!--查询大于指定时间的短信列表-->
+    <select id="selectByGreaterThanAndSendError" resultType="com.yunxi.stamper.entity.Sms">
+        SELECT
+        	*
+        FROM
+        	sms
+        WHERE
+        	delete_date IS NULL
+        AND plan_time > #{_parameter}
+        AND `status` = 1
+        AND times &lt; 5
+    </select>
+</mapper>

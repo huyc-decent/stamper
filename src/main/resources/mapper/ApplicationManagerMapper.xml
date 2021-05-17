@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ApplicationManagerMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.ApplicationManager" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+      <id column="id" property="id" jdbcType="INTEGER" />
+      <result column="org_id" property="orgId" jdbcType="INTEGER" />
+      <result column="application_id" property="applicationId" jdbcType="INTEGER" />
+      <result column="node_id" property="nodeId" jdbcType="INTEGER" />
+      <result column="manager_id" property="managerId" jdbcType="INTEGER" />
+      <result column="manager_name" property="managerName" jdbcType="VARCHAR" />
+      <result column="from_user_id" property="fromUserId" jdbcType="INTEGER" />
+      <result column="push_user_id" property="pushUserId" jdbcType="INTEGER" />
+      <result column="push_user_name" property="pushUserName" jdbcType="VARCHAR" />
+      <result column="status" property="status" jdbcType="INTEGER" />
+      <result column="suggest" property="suggest" jdbcType="VARCHAR" />
+      <result column="time" property="time" jdbcType="TIMESTAMP" />
+      <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+      <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+      <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+    <select id="selectByApplication"
+            resultType="com.yunxi.stamper.entityVo.ApplicationManagerVoSelect">
+        SELECT
+        	*
+        FROM
+        	application_manager
+        WHERE
+        	delete_date IS NULL
+        AND application_id = #{_parameter}
+    </select>
+    <!--查询指定申请单+审批人 正在处理的审批记录-->
+    <select id="selectByApplicationAndManagerAndDealing"
+            resultType="com.yunxi.stamper.entity.ApplicationManager">
+        SELECT
+            *
+        FROM
+            application_manager
+        WHERE
+            delete_date IS NULL
+        AND application_id = #{param1}
+        AND manager_id = #{param2}
+        AND status = 1
+        LIMIT 1
+    </select>
+</mapper>

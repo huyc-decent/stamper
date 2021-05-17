@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunxi.stamper.mapper.ShortcutMapper">
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Shortcut">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="perms_id" jdbcType="INTEGER" property="permsId" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="create_date" jdbcType="TIMESTAMP" property="createDate" />
+    <result column="update_date" jdbcType="TIMESTAMP" property="updateDate" />
+    <result column="delete_date" jdbcType="TIMESTAMP" property="deleteDate" />
+    <result column="org_id" jdbcType="INTEGER" property="orgId" />
+  </resultMap>
+</mapper>

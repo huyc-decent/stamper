@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.OrgQssMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.OrgQss" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="org_id" property="orgId" jdbcType="INTEGER" />
+    <result column="qss_id" property="qssId" jdbcType="INTEGER" />
+  </resultMap>
+</mapper>

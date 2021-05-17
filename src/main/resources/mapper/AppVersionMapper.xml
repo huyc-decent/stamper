@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.AppVersionMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.AppVersion">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="version" property="version" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="android" property="android" jdbcType="VARCHAR"/>
+        <result column="ios" property="ios" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询指定客户端的最后一个新版本-->
+    <select id="selectByLastVersion" resultType="com.yunxi.stamper.entity.AppVersion">
+        SELECT
+        *
+        FROM
+        app_version
+        WHERE
+        delete_date IS NULL
+        <if test="_parameter == 'android'">
+            AND android IS NOT NULL
+        </if>
+        <if test="_parameter == 'ios'">
+            AND ios IS NOT NULL
+        </if>
+        ORDER BY
+        create_date DESC
+        LIMIT 1
+    </select>
+</mapper>

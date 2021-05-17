@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ApplicationMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Application">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="department_id" property="departmentId" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="user_count" property="userCount" jdbcType="INTEGER"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="encrypt_id" property="encryptId" jdbcType="INTEGER"/>
+        <result column="process_id" property="processId" jdbcType="INTEGER"/>
+        <result column="node_id" property="nodeId" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询审批完成-->
+    <select id="selectByManagerOK" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_manager am ON app.id = am.application_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND am.delete_date IS NULL
+        AND am.manager_id = #{param1}
+        AND app.org_id = #{param2}
+        AND am.`status` IN (2, 3, 4)
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC
+    </select>
+    <!--查询已授权-->
+    <select id="selectByKeeperOK" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_keeper ak ON app.id = ak.application_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND ak.delete_date IS NULL
+        AND ak.keeper_id = #{param1}
+        AND ak.`status` IN (2 , 3 , 4)
+        AND app.org_id = #{param2}
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC
+    </select>
+    <!--查询已审计-->
+    <select id="selectByAuditorOK" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_auditor aa ON app.id = aa.application_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND aa.delete_date IS NULL
+        AND aa.auditor_id = #{param1}
+        AND aa.`status` IN (2,3,4)
+        AND app.org_id = #{param2}
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC,
+        app.`status` DESC
+    </select>
+    <select id="selectByManagerOkAndOrg" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_manager am ON app.id = am.application_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND am.delete_date IS NULL
+        AND app.org_id = #{_parameter}
+        AND am.`status` IN (2, 3, 4)
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC
+    </select>
+    <select id="selectByKeeperOKAndOrg" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_keeper ak ON app.id = ak.application_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND ak.delete_date IS NULL
+        AND app.org_id = #{_parameter}
+        AND ak.`status` IN (2 , 3 , 4)
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC
+    </select>
+    <select id="selectByAuditorOKAndOrg" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_auditor aa ON app.id = aa.application_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND aa.delete_date IS NULL
+        AND app.org_id = #{_parameter}
+        AND aa.`status` IN (2, 3 , 4)
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC,
+        app.`status` DESC
+    </select>
+    <select id="selectById" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        *
+        FROM
+        application
+        WHERE
+        id = #{_parameter}
+        AND delete_date IS NULL
+    </select>
+    <!--查询我的处理中的申请单数量-->
+    <select id="selectCountByPendingApplications" resultType="java.lang.Integer">
+        SELECT
+        COUNT(1)
+        FROM
+        application
+        WHERE
+        delete_date IS NULL
+        AND user_id = #{_parameter}
+        AND `status` NOT IN (3,6,11,12,13)
+    </select>
+    <!--查询用户待审批申请单数量-->
+    <select id="selectCountByPendingManagers" resultType="java.lang.Integer">
+        SELECT
+        COUNT(DISTINCT app.id)
+        FROM
+        application app
+        LEFT JOIN application_manager am ON app.id = am.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND am.delete_date IS NULL
+        AND am.manager_id = #{_parameter}
+        AND am.`status` = 1
+    </select>
+    <!--查询用户待授权申请单数量-->
+    <select id="selectCountByPendingKeepers" resultType="java.lang.Integer">
+        SELECT
+        COUNT(DISTINCT app.id)
+        FROM
+        application app
+        LEFT JOIN application_keeper ak ON app.id = ak.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ak.delete_date IS NULL
+        AND ak.keeper_id = #{_parameter}
+        AND ak.`status` = 1
+    </select>
+    <!--查询用户待审计申请单数量-->
+    <select id="selectCountByPendingAuditors" resultType="java.lang.Integer">
+        SELECT
+        COUNT(DISTINCT app.id)
+        FROM
+        application app
+        LEFT JOIN application_auditor aa ON app.id = aa.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND app.org_id = #{param2}
+        AND aa.org_id = #{param2}
+        AND aa.delete_date IS NULL
+        AND aa.auditor_id = #{param1}
+        AND aa.`status` = 1
+        AND app.`status` = 10
+    </select>
+    <!--查询待完结/已完结申请单 0 待完结  1:已完结-->
+    <select id="selectByStatusAndUser" resultType="com.yunxi.stamper.entityVo.ApplicationVo">
+        SELECT
+        app.*
+        FROM
+        application app
+        WHERE
+        app.delete_date IS NULL
+        -- 申请人id
+        AND app.user_id = #{userId}
+        <if test="type==1">
+            -- 已完结 0 待完结 1:已完结
+            AND app.`status` IN (3, 6, 11, 12, 13)
+        </if>
+        <if test="type==0">
+            -- 未完结
+            AND app.`status` NOT in (3,6,11,12,13)
+        </if>
+        <if test="status!=null">
+            -- 申请单状态
+            AND app.`status` = #{status}
+        </if>
+        <if test="keyword!=null and keyword!=''">
+            -- 申请标题+申请说明
+            <bind name="keyword" value="'%' + keyword + '%'"/>
+            AND (
+            app.title LIKE #{keyword}
+            OR app.content LIKE #{keyword}
+            )
+        </if>
+        <if test="start!=null">
+            -- 时间区间.开始时间
+            AND app.create_date &gt; #{start}
+        </if>
+        <if test="end!=null">
+            -- 时间区间.结束时间
+            AND app.create_date &lt; #{end}
+        </if>
+        GROUP BY app.id
+        ORDER BY create_date DESC
+    </select>
+    <select id="getNearestApplications" resultType="com.yunxi.stamper.entityVo.ApplicationVo">
+        SELECT
+        DISTINCT app.*,
+        ad.already_count alreadyCount
+        FROM
+        application app
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND app.user_id = #{_parameter}
+        GROUP BY
+        app.id
+        ORDER BY
+        app.update_date DESC
+        LIMIT 5
+    </select>
+    <!--查询该用户未处理(审批、授权、审计)完结的申请单-->
+    <select id="selectApplicationsByUser" resultType="java.lang.Integer">
+        SELECT DISTINCT
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_manager am ON app.id = am.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND am.delete_date IS NULL
+        AND app.`status` NOT IN (3, 6, 11, 12, 13)
+        AND am.manager_id = #{_parameter}
+        AND am.`status` = 1
+    </select>
+    <!--查询指定集团、指定用户列表的申请单总数量-->
+    <select id="selectCountByOrgAndUser" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        application
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND `status` NOT IN (0, 3, 6, 12, 13)
+        AND user_id IN
+        <foreach collection="param2" open="(" separator="," close=")" item="userId">
+            #{userId}
+        </foreach>
+    </select>
+
+    <!--查询待绑定申请单列表-->
+    <select id="selectBySealRecordInfoToBind" resultType="com.yunxi.stamper.entityVo.ApplicationToBind">
+        SELECT
+        DISTINCT app.id,
+        ak.time,
+        app.title,
+        app.user_name,
+        ad.device_name
+        FROM
+        application app
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        LEFT JOIN application_keeper ak ON app.id = ak.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND ak.delete_date IS NULL
+        AND ad.device_id = #{param3}
+        AND app.user_id = #{param1}
+        AND ak.time >= #{param2}
+        AND ak.`status` = 2
+        AND app.`status` IN (5, 7, 8, 9, 10)
+        AND ad.already_count &lt; ad.user_count
+        ORDER BY
+        ak.time DESC
+    </select>
+    <!--查询用户申请的申请单总数量-->
+    <select id="selectCountByOrgAndUserAndTitle" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        application
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND user_id = #{param2}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'"/>
+            AND title LIKE #{param3}
+        </if>
+    </select>
+    <!--查询未审批申请单列表-->
+    <select id="selectNotApprovedByOrgAndDepartmentAndManager"
+            resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT * FROM
+        (
+        SELECT
+        IF (
+        am.manager_id = #{param3},
+        TRUE,
+        FALSE
+        ) AS isManager,
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_manager am ON app.id = am.application_id
+        LEFT JOIN relate_department_user rdu ON rdu.user_id = am.manager_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND am.delete_date IS NULL
+        AND app.org_id = #{param1}
+        AND am.`status` = 1
+        AND app.`status` != 3
+        <if test="param2!=null and param2.size>0">
+            AND rdu.department_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param2==null or param2.size==0">
+            AND am.manager_id = #{param3}
+        </if>
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC
+        ) temp
+        ORDER BY isManager DESC
+    </select>
+    <!--查询未授权申请单列表-->
+    <select id="selectUnAuthorizedByOrgAndDepartmentAndKeeper"
+            resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT * FROM
+        (
+        SELECT
+        IF (ak.keeper_id = #{param3}, TRUE, FALSE) AS isKeeper,
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_keeper ak ON app.id = ak.application_id
+        LEFT JOIN relate_department_user rdu ON rdu.user_id = ak.keeper_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND ak.delete_date IS NULL
+        <if test="param2!=null and param2.size>0">
+            AND rdu.department_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param2==null or param2.size==0">
+            AND ak.keeper_id = #{param3}
+        </if>
+        AND ak.`status` = 1
+        AND app.`status` != 6
+        AND app.org_id = #{param1}
+        GROUP BY
+        app.id
+        ORDER BY
+        app.create_date DESC
+        ) temp ORDER BY isKeeper DESC
+    </select>
+    <!--查询未审计申请单列表-->
+    <select id="selectNotAuditedByOrgAndDepartmentAndAuditor"
+            resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT * FROM
+        (
+        SELECT
+        IF (aa.auditor_id = #{param3} AND app.`status` = 10,TRUE,FALSE) AS isAuditor,
+        GROUP_CONCAT(DISTINCT ad.device_name) AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_auditor aa ON app.id = aa.application_id
+        LEFT JOIN relate_department_user rdu ON rdu.user_id = aa.auditor_id
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND aa.delete_date IS NULL
+        AND app.org_id = #{param1}
+        AND aa.`status` = 1
+        AND app.`status` IN (9, 10)
+        <if test="param2!=null and param2.size>0">
+            AND rdu.department_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param2==null or param2.size==0">
+            AND aa.auditor_id = #{param3}
+        </if>
+        GROUP BY app.id
+        ORDER BY app.create_date DESC,app.`status` DESC
+        ) temp
+        ORDER BY isAuditor DESC
+    </select>
+    <select id="selectCountByOrg" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        application
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{_parameter}
+    </select>
+    <select id="getNotAuditedApplications" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        ad.device_name AS deviceNames,
+        <if test="param3 == 0">
+            IF (aa.auditor_id = #{param2},TRUE,FALSE) AS isAuditor,
+        </if>
+        <if test="param3 == 1">
+            TRUE AS isAuditor,
+        </if>
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_device ad ON app.id = ad.application_id
+        LEFT JOIN application_auditor aa ON app.id = aa.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND app.org_id = #{param1}
+        AND ad.delete_date IS NULL
+        AND ad.org_id = #{param1}
+        AND aa.delete_date IS NULL
+        AND aa.org_id = #{param1}
+        AND app.`status` IN (9, 10)
+        AND aa.`status` = 1
+        <if test="param3 == 1">
+            AND aa.auditor_id = #{param2}
+        </if>
+        ORDER BY
+        <if test="param3 == 0">
+            isAuditor DESC,
+        </if>
+        app.create_date DESC,app.`status` DESC
+    </select>
+    <select id="selectAuditedApplications" resultType="com.yunxi.stamper.entityVo.ApplicationVoSelect">
+        SELECT
+        aa.device_name AS deviceNames,
+        app.*
+        FROM
+        application app
+        LEFT JOIN application_auditor aa ON app.id = aa.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND app.org_id = #{param1}
+        AND aa.delete_date IS NULL
+        AND aa.`status` IN (2, 3, 4)
+        AND app.`status` IN (11, 12, 13)
+        <if test="param3 == 1">
+            AND aa.auditor_id = #{param2}
+        </if>
+        ORDER BY app.create_date DESC,app.`status` DESC
+    </select>
+    <select id="selectList" resultType="java.lang.Integer">
+        SELECT
+        app.id
+        FROM
+        application app
+        LEFT JOIN application_manager manager ON app.id = manager.application_id
+        LEFT JOIN application_auditor auditor ON app.id = auditor.application_id
+        WHERE
+        app.delete_date IS NULL
+        AND manager.delete_date IS NULL
+        AND auditor.delete_date IS NULL
+        AND app.org_id = #{param1}
+        AND manager.org_id = #{param1}
+        AND auditor.org_id = #{param1}
+        <if test="param2!=null and param2.size > 0 and param3 != null and param3.size > 0">
+            AND (
+            1=1
+            <if test="param2.contains(0)">
+                OR app.user_id IN
+                <foreach collection="param3" open="(" close=")" item="userId" separator=",">
+                    #{userId}
+                </foreach>
+            </if>
+            <if test="param2.contains(1)">
+                OR manager.manager_id IN
+                <foreach collection="param3" open="(" close=")" item="userId" separator=",">
+                    #{userId}
+                </foreach>
+            </if>
+            <if test="param2.contains(2)">
+                OR auditor.auditor_id IN
+                <foreach collection="param3" open="(" close=")" item="userId" separator=",">
+                    #{userId}
+                </foreach>
+            </if>
+            )
+        </if>
+    </select>
+    <select id="applicationReportList" resultType="com.yunxi.stamper.entityVo.DtoApplicationForm">
+        SELECT
+        a.id,
+        a.create_date AS 'createDate',
+        a.user_count AS 'totalCount',
+        GROUP_CONCAT(am.manager_name) AS 'managerUsername',
+        ak.keeper_name AS 'keeperUsername',
+        aa.auditor_name AS 'auditorUsername',
+        a.user_name AS 'applicationUsername',
+        a.title,
+        a.content,
+        ad.device_name AS 'deviceName',
+        ad.already_count AS 'useCount',
+        a.`status`
+        FROM
+        application a
+        LEFT JOIN application_device ad ON a.id = ad.application_id
+        LEFT JOIN application_manager am ON a.id = am.application_id
+        LEFT JOIN application_keeper ak ON a.id = ak.application_id
+        LEFT JOIN application_auditor aa ON a.id = aa.application_id
+        WHERE
+        a.delete_date IS NULL
+        <if test="param1 != null">
+            AND a.create_date > #{param1}
+        </if>
+        <if test="param2 != null">
+            AND a.create_date &lt; #{param2}
+        </if>
+        <if test="param3 != null and param3.size > 0">
+            AND a.`status` IN
+            <foreach collection="param3" open="(" item="status" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+        <if test="param4 != null and param4.size > 0">
+            AND am.manager_id IN
+            <foreach collection="param4" open="(" item="managerId" separator="," close=")">
+                #{managerId}
+            </foreach>
+        </if>
+        <if test="param5 != null and param5.size > 0">
+            AND ak.keeper_id IN
+            <foreach collection="param5" open="(" item="keeperId" separator="," close=")">
+                #{keeperId}
+            </foreach>
+        </if>
+        <if test="param6 != null and param6.size > 0">
+            AND aa.auditor_id IN
+            <foreach collection="param6" open="(" item="auditorId" separator="," close=")">
+                #{auditorId}
+            </foreach>
+        </if>
+        <if test="param7 != null and param7 != ''">
+            <bind name="param7" value="'%' + param7 + '%'"/>
+            AND a.title LIKE #{param7}
+        </if>
+        <if test="param8 != null and param8 != ''">
+            <bind name="param8" value="'%' + param8 + '%'"/>
+            AND a.content LIKE #{param8}
+        </if>
+        <if test="param9 != null and param9.size > 0">
+            AND ad.device_id IN
+            <foreach collection="param9" open="(" item="deviceId" separator="," close=")">
+                #{deviceId}
+            </foreach>
+        </if>
+        <if test="param10 != null and param10.size > 0">
+            AND a.user_id IN
+            <foreach collection="param10" open="(" item="userId" separator="," close=")">
+                #{userId}
+            </foreach>
+        </if>
+        AND a.org_id = #{param11}
+        GROUP BY a.id
+        ORDER BY a.create_date
+    </select>
+
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ApplicationNodeMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.ApplicationNode">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="application_id" property="applicationId" jdbcType="INTEGER"/>
+        <result column="order_no" property="orderNo" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="icon" property="icon" jdbcType="INTEGER"/>
+        <result column="node_type" property="nodeType" jdbcType="VARCHAR"/>
+        <result column="manager_ids" property="managerIds" jdbcType="VARCHAR"/>
+        <result column="manager_level" property="managerLevel" jdbcType="INTEGER"/>
+        <result column="department_id" property="departmentId" jdbcType="INTEGER"/>
+        <result column="handle" property="handle" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询申请单审批流程列表-->
+    <select id="selectByApplication" resultType="com.yunxi.stamper.entityVo.ApplicationNodeVo">
+        SELECT
+        	*
+        FROM
+        	application_node
+        WHERE
+        	delete_date IS NULL
+        AND application_id = #{_parameter}
+        ORDER BY order_no
+    </select>
+    <select id="selectByNextNode" resultType="java.lang.Integer">
+        SELECT
+        	MIN(id)
+        FROM
+        	application_node
+        WHERE
+        	delete_date IS NULL
+        AND application_id = #{param1}
+        AND order_no > #{param2}
+        ORDER BY
+        	order_no
+    </select>
+    <!--查询设备未处理的节点记录列表-->
+    <select id="selectNoKeeperHandleByOrgAndDeviceAndOldKeeperId"
+            resultType="com.yunxi.stamper.entity.ApplicationNode">
+        SELECT
+        	an.*
+        FROM
+        	application_node an
+        LEFT JOIN application_device ad ON ad.application_id = ad.application_id
+        LEFT JOIN application app ON an.application_id = app.id
+        WHERE
+        	an.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND app.delete_date IS NULL
+        AND app.`status` IN (0, 1, 2)
+        AND ad.org_id = #{param1}
+        AND ad.device_id = #{param2}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND manager_ids like #{param3}
+        </if>
+        AND an.icon = - 1
+        AND an.handle = 1
+        AND an.`name` = '授权'
+        GROUP BY
+        	an.id
+    </select>
+    <!--查询设备未处理的节点记录列表-->
+    <select id="selectNoAuditorHandleByOrgAndDeviceAndOldAuditorId"
+            resultType="com.yunxi.stamper.entity.ApplicationNode">
+        SELECT
+        	an.*
+        FROM
+        	application_node an
+        LEFT JOIN application_device ad ON ad.application_id = ad.application_id
+        LEFT JOIN application app ON an.application_id = app.id
+        WHERE
+        	an.delete_date IS NULL
+        AND ad.delete_date IS NULL
+        AND app.delete_date IS NULL
+        AND app.`status` IN (0, 1, 2, 4, 5, 7, 8, 9)
+        AND ad.org_id = #{param1}
+        AND ad.device_id = #{param2}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND manager_ids like #{param3}
+        </if>
+        AND an.icon = - 1
+        AND an.handle = 1
+        AND an.`name` = '审计'
+        GROUP BY
+        	an.id
+    </select>
+</mapper>

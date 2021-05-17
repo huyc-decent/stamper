@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.DepartmentMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Department">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="manager_user_id" property="managerUserId" jdbcType="INTEGER"/>
+        <result column="parent_id" property="parentId" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="logo" property="logo" jdbcType="VARCHAR"/>
+        <result column="position_id" property="positionId" jdbcType="INTEGER"/>
+        <result column="level" property="level" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+        <result column="parent_code" property="parentCode" jdbcType="VARCHAR"/>
+        <result column="location" property="location" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+    </resultMap>
+    <!--删除指定组织ID列表-->
+    <delete id="deleteByDepartmentIds">
+        UPDATE department
+        SET delete_date = now()
+        WHERE
+        delete_date IS NULL
+        AND id IN
+        <foreach collection="list" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+    </delete>
+    <select id="selectByParent" resultType="com.yunxi.stamper.entityVo.DepartmentVo">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND parent_id = #{_parameter}
+    </select>
+    <select id="selectTopDepartMentsByOrg" resultType="com.yunxi.stamper.entityVo.DepartmentVo">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND parent_id IS NULL
+        AND org_id = #{_parameter}
+    </select>
+    <!--查询公司下(+父级组织)组织列表-->
+    <select id="selectByOrgAndParent" resultType="com.yunxi.stamper.entityVo.DepartmentVo">
+        SELECT
+        d.*, u.user_name AS managerUserName
+        FROM
+        department d
+        LEFT JOIN `user` u ON d.manager_user_id = u.id
+        WHERE
+        d.delete_date IS NULL
+        AND d.org_id = #{param1}
+        <if test="param2!=null">
+            AND d.parent_id = #{param2}
+        </if>
+        <if test="param2==null">
+            AND d.parent_id IS NULL
+        </if>
+    </select>
+    <!--查询用户管理的部门ID列表-->
+    <select id="selectDepartmentIdsByManager" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND manager_user_id = #{param2}
+    </select>
+    <!--查询指定集团下、指定父组织下、指定名称的组织信息-->
+    <select id="selectByOrgIdAndParentIdAndName" resultType="com.yunxi.stamper.entity.Department">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+        AND `name` = #{param3}
+        LIMIT 1
+    </select>
+    <!-- 查询指定集团下、指定父组织ID下的子组织列表-->
+    <select id="selectOrganizationalTreeByOrgAndParent"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalTree">
+        SELECT
+        id,
+        `name`,
+        `type`
+        FROM
+        department d
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+    </select>
+    <!--查询指定集团下、指定父组织下、指定类型的组织列表-->
+    <select id="selectByOrgAndParentAndType" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+        <if test="param3!=null">
+            AND `type` = #{param3}
+        </if>
+    </select>
+    <!--查询指定集团、指定负责人负责的组织ID列表-->
+    <select id="selectIdsByOrgAndManager" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND manager_user_id = #{param2}
+    </select>
+    <!--查询用户所属组织列表-->
+    <select id="selectDepartmentsByOrgAndUser" resultType="com.yunxi.stamper.entity.Department">
+        SELECT
+        d.id,
+        d.`name`,
+        d.type
+        FROM
+        department d
+        LEFT JOIN relate_department_user rdu ON d.id = rdu.department_id
+        WHERE
+        d.delete_date IS NULL
+        AND d.org_id = #{param1}
+        AND rdu.user_id = #{param2}
+    </select>
+    <!--属主：查询集团、父组织下组织列表-->
+    <select id="selectOrganizationalByOrgAndParentForOwner"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT
+        id AS `key`,
+        `name` AS `label`
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+    </select>
+    <!--非属主：查询集团、父组织下组织列表(仅可见组织)-->
+    <select id="selectOrganizationalByOrgAndParentForUser"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT
+        id AS `key`,
+        `name` AS `label`
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        AND id IN
+        <foreach collection="param3" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+    </select>
+    <select id="selectCountByManagerUserId" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND manager_user_id = #{param2}
+    </select>
+    <!--查询指定集团下、指定组织类型的组织列表-->
+    <select id="selectDepartmentsByOrgAndType" resultType="com.yunxi.stamper.entity.Department">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null">
+            AND `type` = #{param2}
+        </if>
+    </select>
+    <!--查询指定集团下、指定组织ID的信息-->
+    <select id="selectByOrgAndDepartmentIds" resultType="com.yunxi.stamper.entityVo.DepartmentKV">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null and param2.size>0">
+            AND id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+    </select>
+    <!--查询指定集团下的所有组织ID列表-->
+    <select id="selectDepartmentIdsByOrg" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{_parameter}
+    </select>
+    <!--查询指定集团下、指定用户关联的组织信息列表-->
+    <select id="selectByOrgAndUser" resultType="com.yunxi.stamper.entity.Department">
+        SELECT
+        d.id,
+        d.`name`
+        FROM
+        department d
+        LEFT JOIN relate_department_user rdu ON d.id = rdu.department_id
+        WHERE
+        d.delete_date IS NULL
+        AND d.org_id = #{param1}
+        AND rdu.user_id = #{param2}
+    </select>
+    <!--查询指定集团下、指定职称的组织列表-->
+    <select id="selectByOrgAndPosition" resultType="com.yunxi.stamper.entity.Department">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND position_id = #{param2}
+    </select>
+    <!--查询指定code为前缀的子组织ID列表-->
+    <select id="selectChildrenIdsByOrgAndTypeAndPrefixCode" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null">
+            AND `type` = #{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'"/>
+            AND parent_code LIKE #{param3}
+        </if>
+    </select>
+    <!--查询子组织列表-->
+    <select id="selectOrganizationalTreeByOrgAndParentAndType"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalTree">
+        SELECT
+        id,
+        `name`,
+        `type`
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        <if test="param3!=null">
+            AND `type` = #{param3}
+        </if>
+    </select>
+    <!--查询子组织列表-->
+    <select id="selectOrganizationalByOrgAndParentToAddFlow"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT
+        id AS `key`,
+        `name` AS label
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+    </select>
+    <!--查询子组织列表-->
+    <select id="selectOrganizationalByOrgAndParentToApplicationSignet"
+            resultType="com.yunxi.stamper.entityVo.OrganizationalEntity">
+        SELECT DISTINCT
+        id AS `key`,
+        `name` AS label
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        <if test="param3!=null">
+            AND (`type` = #{param3} OR `type` = 2)
+        </if>
+    </select>
+    <!--查询子组织ID列表-->
+    <select id="selectChildrenIdsByOrgAndParentsAndType" resultType="java.lang.Integer">
+        SELECT DISTINCT
+        id
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND parent_id IN
+        <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+        <if test="param3!=null">
+            AND `type` = #{param3}
+        </if>
+    </select>
+    <!--查询以父ID链表为前缀的子公司ID列表(不包含子部门)-->
+    <select id="selectCompanyIdsByOrgAndPrefixCode" resultType="java.lang.Integer">
+        SELECT
+        id
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null and param2!=''">
+            <bind name="param2" value="'%' + param2 + '%'"/>
+            AND parent_code LIKE #{param2}
+        </if>
+        AND `type` = 1
+    </select>
+    <!--查询子组织信息列表-->
+    <select id="selectDepartmentsByOrgAndParentAndType" resultType="com.yunxi.stamper.entity.Department">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2==null">
+            AND parent_id IS NULL
+        </if>
+        <if test="param2!=null">
+            AND parent_id = #{param2}
+        </if>
+        <if test="param3!=null">
+            AND `type` = 0
+        </if>
+    </select>
+    <!--查询集团下组织ID列表-->
+    <select id="selectChildrenIdsByOrgAndType" resultType="java.lang.Integer">
+        SELECT
+        *
+        FROM
+        department
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null">
+            AND `type` = #{param2}
+        </if>
+    </select>
+</mapper>

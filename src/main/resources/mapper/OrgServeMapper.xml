@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.OrgServeMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.OrgServe" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <result column="org_id" property="orgId" jdbcType="INTEGER" />
+    <result column="serve_id" property="serveId" jdbcType="INTEGER" />
+  </resultMap>
+  <!--查询公司指定服务编码的实例-->
+    <select id="selectByOrgAndCode" resultType="com.yunxi.stamper.entity.OrgServe">
+        SELECT
+        	os.*
+        FROM
+        	org_serve os
+        LEFT JOIN serve s ON os.serve_id = s.id
+        WHERE
+        	s.delete_date IS NULL
+        AND s.`code` = #{param2}
+        AND os.org_id = #{param1}
+    </select>
+</mapper>

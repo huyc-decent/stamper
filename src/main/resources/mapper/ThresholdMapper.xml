@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ThresholdMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Threshold">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="device_id" property="deviceId" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="ramark" property="remark" jdbcType="VARCHAR"/>
+        <result column="threshold_value" property="thresholdValue" jdbcType="INTEGER"/>
+        <result column="device_type" property="deviceType" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询管理的印章阈值列表-->
+    <select id="selectByOrgAndDepartmentAndKeeper" resultType="com.yunxi.stamper.entityVo.ThresholdEntity">
+        SELECT
+        s.id,
+        IFNULL(s.`transfer_time`, s.`create_date`) AS `create_date`,
+        s.`name`,
+        th.threshold_value
+        FROM
+        signet s
+        LEFT JOIN threshold th ON th.device_id = s.id
+        WHERE
+        th.delete_date IS NULL
+        AND s.delete_date IS NULL
+        AND s.org_id = #{param1}
+        <if test="param2!=null and param2!=''">
+            <bind name="param2" value="'%' + param2 + '%'" />
+            AND s.`name` LIKE #{param2}
+        </if>
+        GROUP BY s.id
+        ORDER BY s.id
+    </select>
+</mapper>

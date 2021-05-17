@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.NoticeMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Notice">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="receive_id" property="receiveId" jdbcType="INTEGER"/>
+        <result column="cid" property="cid" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="times" property="times" jdbcType="INTEGER"/>
+        <result column="error" property="error" jdbcType="VARCHAR"/>
+        <result column="is_see" property="isSee" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <update id="updateSee">
+        UPDATE notice
+        SET is_see = #{param2}
+        WHERE
+        	id = #{param1}
+    </update>
+    <!--查询登录用户未查看的系统角标-->
+    <select id="selectCountByNotViewedFromLogin" resultType="java.lang.Integer">
+        SELECT
+        	COUNT(1)
+        FROM
+        	notice
+        WHERE
+        	receive_id = #{_parameter}
+        AND delete_date IS NULL
+        AND is_see = 0
+    </select>
+    <!--查询用户通知消息列表-->
+    <select id="selectByOrgAndUserAndKeyword" resultType="com.yunxi.stamper.entity.Notice">
+        SELECT
+        id,
+        create_date,
+        title,
+        content,
+        is_see
+        FROM
+        notice
+        WHERE
+        delete_date IS NULL
+        AND receive_id = #{param1}
+        <if test="param2!=null and param2!=''">
+            <bind name="param2" value="'%' + param2 + '%'" />
+            AND title LIKE #{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND content LIKE #{param3}
+        </if>
+        ORDER BY
+        create_date DESC
+    </select>
+    <!--查看用户通知消息列表-->
+    <select id="selectByUserAndTitleAndSee" resultType="com.yunxi.stamper.entity.Notice">
+        SELECT
+        *
+        FROM
+        notice
+        WHERE
+        delete_date IS NULL
+        AND receive_id = #{param1}
+        <if test="param2!=null and param2!=''">
+            <bind name="param2" value="'%' + param2 + '%'" />
+            AND title LIKE #{param2}
+        </if>
+        AND is_see = #{param3}
+        ORDER BY
+        create_date
+    </select>
+</mapper>

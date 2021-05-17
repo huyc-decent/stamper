@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.FlowNodeMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.FlowNode" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="flow_id" property="flowId" jdbcType="INTEGER" />
+    <result column="order_no" property="orderNo" jdbcType="INTEGER" />
+    <result column="manager_json" property="managerJson" jdbcType="VARCHAR" />
+    <result column="type" property="type" jdbcType="INTEGER" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+    <select id="selectVoByFlow" resultType="com.yunxi.stamper.entityVo.FlowVoAddEntity">
+        SELECT
+        	*
+        FROM
+        	flow_node
+        WHERE
+        	flow_id = #{_parameter}
+        AND delete_date IS NULL
+        ORDER BY
+        	order_no
+    </select>
+</mapper>

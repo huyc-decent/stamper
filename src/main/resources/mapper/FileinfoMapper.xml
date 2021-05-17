@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.FileinfoMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.FileInfo">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="upload_host" property="uploadHost" jdbcType="VARCHAR"/>
+        <result column="original_name" property="originalName" jdbcType="VARCHAR"/>
+        <result column="file_name" property="fileName" jdbcType="VARCHAR"/>
+        <result column="size" property="size" jdbcType="BIGINT"/>
+        <result column="relative_path" property="relativePath" jdbcType="VARCHAR"/>
+        <result column="absolute_path" property="absolutePath" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="scaling" property="scaling" jdbcType="INTEGER"/>
+        <result column="hash" property="hash" jdbcType="VARCHAR" />
+        <result column="host" property="host" jdbcType="VARCHAR" />
+        <result column="secret_key" property="secretKey" jdbcType="VARCHAR" />
+        <result column="key_index" property="keyIndex" jdbcType="VARCHAR" />
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询指定时间段、指定类型的文件列表-->
+    <select id="getBetweenNowAndPreAndScaling" resultType="com.yunxi.stamper.entity.FileInfo">
+        SELECT
+        *
+        FROM
+        file_info
+        WHERE
+        delete_date IS NULL
+        AND create_date > #{param2}
+        AND create_date &lt; #{param1}
+        AND `status` = 0
+        AND `scaling` = #{param3}
+        AND `size` > 51200
+    </select>
+    <select id="selectByHash" resultType="com.yunxi.stamper.entity.FileInfo">
+        SELECT
+        	*
+        FROM
+        	file_info
+        WHERE
+        	delete_date IS NULL
+        AND `hash` = #{_parameter}
+        ORDER BY
+        	create_date DESC
+        LIMIT 1
+    </select>
+</mapper>

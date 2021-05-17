@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.UserLoggerMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.UserLogger" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="org_id" property="orgId" jdbcType="INTEGER" />
+    <result column="user_id" property="userId" jdbcType="INTEGER" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="client" property="client" jdbcType="VARCHAR" />
+    <result column="args" property="args" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="ip" property="ip" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="error" property="error" jdbcType="VARCHAR" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+    <select id="selectByUserAndNormal" resultType="com.yunxi.stamper.entityVo.UserLoggerVo">
+        SELECT
+        	*
+        FROM
+        	user_logger
+        WHERE
+        	delete_date IS NULL
+        AND org_id = #{param1}
+        AND user_id = #{param2}
+        AND `status` != 2
+        ORDER BY
+        	create_date DESC
+    </select>
+</mapper>

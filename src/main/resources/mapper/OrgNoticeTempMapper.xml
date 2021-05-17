@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.OrgNoticeTempMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.OrgNoticeTemp">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <result column="notice_temp_id" property="noticeTempId" jdbcType="INTEGER"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+    </resultMap>
+    <select id="selectByOrg" resultType="java.lang.Integer">
+            SELECT
+            	notice_temp_id
+            FROM
+            	org_notice_temp
+            WHERE
+            	org_id = #{_parameter}
+    </select>
+</mapper>

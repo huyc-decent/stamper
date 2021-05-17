@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ApplicationDeviceMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.ApplicationDevice" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+      <id column="id" property="id" jdbcType="INTEGER" />
+      <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+      <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+      <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+      <result column="org_id" property="orgId" jdbcType="INTEGER" />
+      <result column="application_id" property="applicationId" jdbcType="INTEGER" />
+      <result column="device_id" property="deviceId" jdbcType="INTEGER" />
+      <result column="device_name" property="deviceName" jdbcType="VARCHAR" />
+      <result column="keeper_id" property="keeperId" jdbcType="INTEGER" />
+      <result column="keeper_name" property="keeperName" jdbcType="VARCHAR" />
+      <result column="auditor_id" property="auditorId" jdbcType="INTEGER" />
+      <result column="auditor_name" property="auditorName" jdbcType="VARCHAR" />
+      <result column="user_count" property="userCount" jdbcType="INTEGER" />
+      <result column="already_count" property="alreadyCount" jdbcType="INTEGER" />
+  </resultMap>
+    <update id="signetMinus1">
+        UPDATE application_device
+        SET already_count = already_count + 1
+        WHERE
+        	delete_date IS NULL
+        AND application_id = #{param1}
+        AND device_id = #{param2}
+    </update>
+    <select id="selectByApplicationID" resultType="com.yunxi.stamper.entityVo.DeviceSelectVo">
+        SELECT
+        	device_id as deviceId,device_name as deviceNames
+        FROM
+        	application_device
+        WHERE
+        	delete_date IS NULL
+        AND application_id = #{_parameter}
+    </select>
+    <!--查询该申请单 印章已盖次数-->
+    <select id="selectUseCountByApplication" resultType="com.yunxi.stamper.entityVo.UseCountVo">
+        SELECT
+            device_id AS id,
+        	device_name as deviceName,
+        	user_count as totalCount,
+        	already_count as useCount
+        FROM
+        	application_device
+        WHERE
+            delete_date IS NULL
+        AND application_id = #{_parameter}
+    </select>
+</mapper>

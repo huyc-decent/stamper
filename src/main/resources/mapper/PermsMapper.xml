@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.PermsMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Perms">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="label" property="label" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="url" property="url" jdbcType="VARCHAR"/>
+        <result column="level" property="level" jdbcType="INTEGER"/>
+        <result column="parent_id" property="parentId" jdbcType="INTEGER"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="icon" property="icon" jdbcType="VARCHAR"/>
+        <result column="order_no" property="orderNo" jdbcType="INTEGER"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="is_shortcut" property="isShortcut" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询子节点列表,组成树结构-->
+    <select id="selectByParent" resultType="com.yunxi.stamper.entityVo.PermsVo">
+      SELECT
+        *
+      FROM
+      	perms
+      WHERE
+      	delete_date IS NULL
+      AND parent_id = #{_parameter}
+      ORDER BY order_no
+  </select>
+    <!--查询根节点-->
+    <select id="selectRoot" resultType="com.yunxi.stamper.entityVo.PermsVo">
+      SELECT
+      	*
+      FROM
+      	perms
+      WHERE
+      	delete_date IS NULL
+      AND parent_id IS NULL
+      ORDER BY order_no
+  </select>
+    <!--SELECT-->
+    <!--DISTINCT p.*-->
+    <!--FROM-->
+    <!--perms p-->
+    <!--LEFT JOIN role_perms rp ON p.id = rp.perms_id-->
+    <!--LEFT JOIN user_role ur ON ur.role_id = rp.role_id-->
+    <!--LEFT JOIN `user` u ON u.id = ur.user_id-->
+    <!--WHERE-->
+    <!--p.delete_date IS NULL-->
+    <!--AND u.delete_date IS NULL-->
+    <!--AND (p.`level` = 3 OR u.id = #{_parameter})-->
+    <select id="selectByUser" resultType="com.yunxi.stamper.entity.Perms">
+        SELECT DISTINCT
+        	p.*
+        FROM
+        	perms p
+        LEFT JOIN role_perms rp ON p.id = rp.perms_id
+        LEFT JOIN user_role ur ON rp.role_id = ur.role_id
+        WHERE
+        	p.delete_date IS NULL
+        AND ur.user_id = #{_parameter}
+        GROUP BY
+        	p.id
+    </select>
+    <select id="selectTopPermsByLevel" resultType="com.yunxi.stamper.entityVo.PermsVo">
+        SELECT
+        	*
+        FROM
+        	perms
+        WHERE
+        	delete_date IS NULL
+        AND `level` >= #{_parameter}
+        AND parent_id IS NULL
+        ORDER BY order_no
+    </select>
+    <select id="selectByParentAndLevel" resultType="com.yunxi.stamper.entityVo.PermsVo">
+        SELECT
+        	*
+        FROM
+        	perms
+        WHERE
+        	delete_date IS NULL
+        AND parent_id = #{param1}
+        AND `level` >= #{param2}
+        ORDER BY order_no
+    </select>
+    <!--用户动态路由1级菜单列表-->
+    <select id="selectByFirstRouteAndUser" resultType="com.yunxi.stamper.entityVo.Route">
+        SELECT
+        	DISTINCT p.*
+        FROM
+        	perms p
+        LEFT JOIN role_perms rp ON p.id = rp.perms_id
+        LEFT JOIN user_role ur ON ur.role_id = rp.role_id
+        WHERE
+        	p.delete_date IS NULL
+        AND p.parent_id IS NULL
+        AND p.type = #{param2}
+        AND ur.user_id = #{param1}
+        ORDER BY p.order_no
+    </select>
+    <!--查询1级路由下的2级路由菜单列表-->
+    <select id="selectChildrenByFirstRoute" resultType="com.yunxi.stamper.entityVo.Route">
+        SELECT
+        	*
+        FROM
+        	perms
+        WHERE
+        	delete_date IS NULL
+        AND parent_id = #{param1}
+        AND type = 1
+        ORDER BY order_no
+    </select>
+    <!--查询公司管理员(属主,非角色管理员)的1级菜单列表-->
+    <select id="selectByFIrstRouteAndAdmin" resultType="com.yunxi.stamper.entityVo.Route">
+        SELECT
+        	*
+        FROM
+        	perms
+        WHERE
+        	delete_date IS NULL
+        AND parent_id IS NULL
+        AND `level` != 0
+        AND `type` = 1
+        ORDER BY order_no
+    </select>
+    <!--查询平台公司管理员(属主,非角色管理员)的1级菜单列表-->
+    <select id="selectAllFirstRouteAndAdmin" resultType="com.yunxi.stamper.entityVo.Route">
+        SELECT
+        	*
+        FROM
+        	perms
+        WHERE
+        	delete_date IS NULL
+        AND parent_id IS NULL
+        ORDER BY order_no
+    </select>
+    <!--查询指定用户,指定父级路由,指定type类型的子级路由列表-->
+    <select id="selectRoutesByParentAndUser" resultType="com.yunxi.stamper.entityVo.Route">
+        SELECT
+        DISTINCT p.*
+        FROM
+        perms p
+        LEFT JOIN role_perms rp ON p.id = rp.perms_id
+        LEFT JOIN user_role ur ON ur.role_id = rp.role_id
+        WHERE
+        p.delete_date IS NULL
+        <if test="param3!=null">
+            AND p.`type` = #{param3}
+        </if>
+        AND p.parent_id = #{param1}
+        AND ur.user_id = #{param2}
+        ORDER BY
+        p.order_no
+    </select>
+    <!--查询用户拥有的快捷方式列表-->
+    <select id="selectQuickLinkByUser" resultType="com.yunxi.stamper.entity.Perms">
+        SELECT DISTINCT
+        	p.*
+        FROM
+        	perms p
+        LEFT JOIN role_perms rp ON p.id = rp.perms_id
+        LEFT JOIN user_role ur ON rp.role_id = ur.role_id
+        WHERE
+        	p.delete_date IS NULL
+        AND p.is_shortcut = 1
+        AND ur.user_id = #{_parameter}
+    </select>
+    <!--查询用户已选择的快捷方式列表-->
+    <select id="selectQuickLinkByUserSelected" resultType="com.yunxi.stamper.entity.Perms">
+        SELECT DISTINCT
+        	p.*
+        FROM
+        	perms p
+        LEFT JOIN shortcut s ON p.id = s.perms_id
+        LEFT JOIN role_perms rp ON p.id = rp.perms_id
+        LEFT JOIN user_role ur ON ur.role_id = rp.role_id
+        WHERE
+        	p.delete_date IS NULL
+        AND s.delete_date IS NULL
+        AND s.user_id = #{_parameter}
+        AND ur.user_id = #{_parameter}
+    </select>
+    <select id="selectUserIDByPerms" resultType="java.lang.Integer">
+        SELECT DISTINCT
+        	u.id
+        FROM
+        	`user` u
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role_perms rp ON ur.role_id = rp.role_id
+        WHERE
+        	u.delete_date IS NULL
+        AND rp.perms_id = #{_parameter}
+    </select>
+</mapper>

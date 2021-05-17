@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.FlowMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Flow">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询出前台需要的审批流程格式,进行编辑-->
+    <select id="selectByVo" resultType="com.yunxi.stamper.entityVo.FlowVoAdd">
+        SELECT
+        	*
+        FROM
+        	flow f
+        WHERE
+        	delete_date IS NULL
+        AND id = #{_parameter}
+    </select>
+    <!--查询指定组织列表下、指定名称的审批流程数量-->
+    <select id="selectByDepartmentAndName" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        flow f
+        LEFT JOIN relate_flow_department rfd ON f.id = rfd.flow_id
+        WHERE
+        f.delete_date IS NULL
+        AND f.`name` = #{param2}
+        AND rfd.department_id IN
+        <foreach collection="param1" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+    </select>
+    <!--查询审批流程列表-->
+    <select id="selectByOrgAndDepartmentAndKeyword" resultType="com.yunxi.stamper.entityVo.FlowVoSelect">
+        SELECT
+        f.id,
+        f.create_date,
+        f.`name`,
+        f.user_id,
+        f.`status`,
+        f.remark
+        FROM
+        flow f
+        LEFT JOIN relate_flow_department fd ON f.id = fd.flow_id
+        WHERE
+        f.delete_date IS NULL
+        AND f.org_id = #{param1}
+        <if test="param2!=null and param2.size>0">
+            AND fd.department_id IN
+            <foreach collection="param2" open="(" separator="," close=")" item="departmentId">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND f.`name` LIKE #{param3}
+        </if>
+        GROUP BY f.id
+    </select>
+    <!--查询审批流程列表-->
+    <select id="selectByOrgAndDepartment" resultType="com.yunxi.stamper.entityVo.FlowEntity">
+        SELECT
+        	DISTINCT f.id,
+        	f.`name`,
+        	GROUP_CONCAT(DISTINCT fn.type) AS `flowType`
+        FROM
+        	flow f
+        LEFT JOIN relate_flow_department rfd ON f.id = rfd.flow_id
+        LEFT JOIN flow_node fn ON f.id = fn.flow_id
+        WHERE
+        	f.delete_date IS NULL
+        AND f.org_id = #{param1}
+        AND fn.delete_date IS NULL
+        AND rfd.department_id = #{param2}
+        GROUP BY f.id
+    </select>
+    <!--查询指定组织下的审批流程列表-->
+    <select id="selectByOrgAndDepartments" resultType="com.yunxi.stamper.entity.Flow">
+        SELECT
+        	f.*
+        FROM
+        	flow f
+        LEFT JOIN relate_flow_department rfd ON f.id = rfd.flow_id
+        WHERE
+        	f.org_id = #{param1}
+        AND rfd.department_id IN
+        <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+            #{departmentId}
+        </foreach>
+    </select>
+</mapper>

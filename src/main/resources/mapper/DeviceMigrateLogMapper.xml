@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.DeviceMigrateLogMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.DeviceMigrateLog">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="device_id" property="deviceId" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="uuid" property="uuid" jdbcType="VARCHAR"/>
+        <result column="new_org_id" property="newOrgId" jdbcType="INTEGER"/>
+        <result column="src_host" property="srcHost" jdbcType="VARCHAR"/>
+        <result column="old_org_id" property="oldOrgId" jdbcType="INTEGER"/>
+        <result column="dest_host" property="destHost" jdbcType="VARCHAR"/>
+        <result column="migrate_status" property="migrateStatus" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectList" resultType="com.yunxi.stamper.entityVo.MigrateVo">
+        SELECT
+        dml.*, s.`name`,
+        s.`name` AS "deviceName",
+        o1.`name` AS "newOrgName",
+        o2.`name` AS "oldOrgName",
+        u.user_name AS "userName"
+        FROM
+        device_migrate_log dml
+        LEFT JOIN signet s ON dml.device_id = s.id
+        LEFT JOIN org o1 ON dml.new_org_id = o1.id
+        LEFT JOIN org o2 ON dml.old_org_id = o2.id
+        LEFT JOIN `user` u ON dml.user_id = u.id
+        <if test="_parameter!=null">
+            WHERE
+            dml.device_id = #{_parameter}
+        </if>
+        ORDER BY
+        dml.create_date DESC
+    </select>
+    <select id="selectListDistinct" resultType="com.yunxi.stamper.entityVo.MigrateVo">
+        SELECT
+        *
+        FROM
+        (
+        SELECT
+        dml.*,
+        dml.update_date as "updateDate",
+        dml.device_id as "deviceId",
+        s.`name` AS "deviceName",
+        o1.`name` AS "newOrgName",
+        o2.`name` AS "oldOrgName",
+        u.user_name AS "userName"
+        FROM
+        device_migrate_log dml
+        LEFT JOIN signet s ON dml.device_id = s.id
+        LEFT JOIN org o1 ON dml.new_org_id = o1.id
+        LEFT JOIN org o2 ON dml.old_org_id = o2.id
+        LEFT JOIN `user` u ON dml.user_id = u.id
+        WHERE dml.update_date is not NULL
+        <if test="_parameter!=null">
+            AND
+            dml.device_id = #{_parameter}
+        </if>
+        ) tp
+        GROUP BY
+        tp.deviceId
+        ORDER BY
+        tp.updateDate
+    </select>
+    <!--查询设备最新的迁移确认记录-->
+    <select id="selectLastByUUID" resultType="com.yunxi.stamper.entity.DeviceMigrateLog">
+        SELECT
+        	*
+        FROM
+        	device_migrate_log
+        WHERE
+        	uuid = #{_parameter}
+        AND migrate_status = 1
+        ORDER BY
+        	update_date DESC
+        LIMIT 1
+    </select>
+</mapper>

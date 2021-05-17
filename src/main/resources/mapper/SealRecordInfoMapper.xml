@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.SealRecordInfoMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.SealRecordInfo">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="device_id" property="deviceId" jdbcType="INTEGER"/>
+        <result column="device_name" property="deviceName" jdbcType="VARCHAR"/>
+        <result column="real_time" property="realTime" jdbcType="TIMESTAMP"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="depart_id" property="departId" jdbcType="INTEGER"/>
+        <result column="application_id" property="applicationId" jdbcType="INTEGER"/>
+        <result column="access_count" property="accessCount" jdbcType="INTEGER"/>
+        <result column="use_count" property="useCount" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="location" property="location" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="skt" property="skt" jdbcType="VARCHAR"/>
+        <result column="is_audit" property="isAudit" jdbcType="INTEGER"/>
+        <result column="error" property="error" jdbcType="INTEGER"/>
+        <result column="is_oos" property="isOos" jdbcType="INTEGER"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <update id="updateError">
+        UPDATE seal_record_info
+        SET error = #{param2}
+        WHERE
+        	id = #{param1}
+    </update>
+    <update id="updateRemark">
+        UPDATE seal_record_info
+        SET remark = #{param2}
+        WHERE
+        id = #{param1}
+    </update>
+    <!--查询申请单使用记录(包含图片)-->
+    <select id="selectVoByApplication" resultType="com.yunxi.stamper.entityVo.SealRecordInfoVoApp">
+        SELECT
+        	DISTINCT sri.*,
+            (
+	        	SELECT
+	        		GROUP_CONCAT(DISTINCT et.`name`)
+	        	FROM
+	        		error_type et
+	        	WHERE
+	        		et.seal_record_info_id = sri.id
+	        ) AS errorMsg
+        FROM
+        	seal_record_info sri
+        WHERE
+        	sri.delete_date IS NULL
+        AND sri.org_id = #{param2}
+        AND sri.application_id = #{param1}
+        ORDER BY
+            sri.real_time DESC,
+            sri.use_count DESC
+    </select>
+    <!--查询该印章在新公司最大次数-->
+    <select id="selectMaxCountBySignetAndOrg" resultType="java.lang.Integer">
+        SELECT
+        	IFNULL(MAX(use_count),0)
+        FROM
+        	seal_record_info
+        WHERE
+        	delete_date IS NULL
+        AND device_id = #{param1}
+        AND org_id = #{param2}
+    </select>
+    <!--查询使用记录列表-->
+    <select id="selectBySignetId" resultType="com.yunxi.stamper.entityVo.SealRecordInfoEntity">
+        SELECT
+        sri.id,
+        sri.device_id,
+        sri.remark,
+        s.`name` AS `deviceName`,
+        sri.real_time,
+        sri.user_name,
+        sri.type,
+        sri.error,
+        sri.use_count,
+        sri.location
+        FROM
+        seal_record_info sri
+        LEFT JOIN signet s ON sri.device_id = s.id
+        WHERE
+        sri.delete_date IS NULL
+        AND sri.org_id = #{param1}
+        AND sri.device_id = #{param2}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND sri.user_name LIKE #{param3}
+        </if>
+        <if test="param4!=null and param4!=''">
+            <bind name="param4" value="'%' + param4 + '%'" />
+            AND sri.location LIKE #{param4}
+        </if>
+        <if test="param5!=null">
+            AND sri.type = #{param5}
+        </if>
+        <if test="param6!=null">
+            AND sri.error = #{param6}
+        </if>
+        <if test="param7!=null">
+            AND sri.real_time > #{param7}
+        </if>
+        <if test="param8!=null">
+            AND sri.real_time &lt; #{param8}
+        </if>
+        group by sri.id
+        ORDER BY
+        sri.use_count DESC,sri.real_time DESC
+    </select>
+    <!--查询申请单的使用记录列表-->
+    <select id="selectInfoByApplication" resultType="com.yunxi.stamper.entityVo.InfoByApplication">
+        SELECT
+        sri.id,
+        sri.user_name,
+        sri.error,
+        sri.use_count,
+        sri.location,
+        IF (sp.file_id IS NULL OR sp.file_id = '',1,0) AS `version`,
+        GROUP_CONCAT(IFNULL(sp.file_id,sp.aes_file_id)) AS `fileIds`,
+        GROUP_CONCAT(sp.file_name) AS `fileNames`,
+        GROUP_CONCAT(sp.`type`) AS `fileTypes`,
+        GROUP_CONCAT(sp.create_date) AS `fileCreates`
+        FROM
+        seal_record_info sri
+        LEFT JOIN stamper_picture sp ON sri.id = sp.info_id
+        WHERE
+        sri.delete_date IS NULL
+        AND sri.application_id = #{_parameter}
+        GROUP BY
+        sri.id
+        ORDER BY
+        sri.use_count DESC
+    </select>
+    <!--查询使用记录总次数-->
+    <select id="selectCountByOrgAndDepartment" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        seal_record_info
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null and param2.size>0">
+            AND depart_id IN
+            <foreach collection="param2" item="departmentId" close=")" separator="," open="(">
+                #{departmentId}
+            </foreach>
+        </if>
+
+    </select>
+    <!--查询各省市区使用记录总数量-->
+    <select id="searchKvFromOrgAndDepartment" resultType="com.yunxi.stamper.commons.report.KeyValue">
+        SELECT
+        <if test="param5==0">
+            IFNULL(a.province, "未知地址") AS `name`,
+        </if>
+        <if test="param5==1">
+            IFNULL(a.city, "未知地址") AS `name`,
+        </if>
+        <if test="param5==2">
+            IFNULL(a.district, "未知地址") AS `name`,
+        </if>
+        count(1) AS `value`
+        FROM
+        seal_record_info sri
+        LEFT JOIN addr a ON sri.location = a.location
+        WHERE
+        sri.delete_date IS NULL
+        AND sri.org_id = #{param1}
+        <if test="param5==1 and param6!=null and param6!=''">
+            <bind name="param6" value="'%' + param6 + '%'" />
+            AND a.province LIKE #{param6}
+        </if>
+        <if test="param5==2 and param6!=null and param6!=''">
+            <bind name="param6" value="'%' + param6 + '%'" />
+            AND a.city LIKE #{param6}
+        </if>
+        <if test="param2!=null and param2.size>0">
+            AND sri.depart_id IN
+            <foreach collection="param2" open="(" separator="," close=")" item="departmentId">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param3!=null">
+            AND sri.real_time > #{param3}
+        </if>
+        <if test="param4!=null">
+            AND sri.real_time &lt; #{param4}
+        </if>
+        <if test="param5==0">
+            GROUP BY a.province
+        </if>
+        <if test="param5==1">
+            GROUP BY a.city
+        </if>
+        <if test="param5==2">
+            GROUP BY a.district
+        </if>
+    </select>
+    <!--查询各省、市、区县的详细地址使用记录总数量-->
+    <select id="searchTotalFromOrgAndDepartment" resultType="com.yunxi.stamper.commons.report.MapVo">
+        SELECT
+        sri.device_name AS `deviceName`,
+        COUNT(sri.id) AS `value`,
+        IFNULL(a.province, "未知") AS `province`,
+        IFNULL(a.city, "未知") AS `city`,
+        IFNULL(a.district, "未知") AS `district`,
+        IFNULL(sri.location, "未知") AS `name`,
+        a.longitude,
+        a.latitude
+        FROM
+        seal_record_info sri
+        LEFT JOIN addr a ON sri.location = a.location
+        WHERE
+        sri.delete_date IS NULL
+        AND sri.org_id = #{param1}
+        <if test="param2!=null and param2.size>0">
+            AND sri.depart_id IN
+            <foreach collection="param2" open="(" separator="," close=")" item="departmentId">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param3!=null">
+            AND sri.real_time > #{param3}
+        </if>
+        <if test="param4!=null">
+            AND sri.real_time &lt; #{param4}
+        </if>
+        <if test="param5==1 and param6!=null and param6!=''">
+            <bind name="param6" value="'%' + param6 + '%'" />
+            AND a.province like #{param6}
+        </if>
+        <if test="param5==2 and param6!=null and param6!=''">
+            <bind name="param6" value="'%' + param6 + '%'" />
+            AND a.city like #{param6}
+        </if>
+        GROUP BY
+        a.location,
+        sri.device_id
+    </select>
+    <!--查询各个设备使用记录总次数-->
+    <select id="selectHistogramByOrgAndDepartment" resultType="com.yunxi.stamper.commons.report.HistogramVo">
+        SELECT
+        count(1) AS `total`,
+        device_id,
+        device_name
+        FROM
+        seal_record_info
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null and param2.size>0">
+            AND depart_id IN
+            <foreach collection="param2" open="(" separator="," close=")" item="departmentId">
+                #{departmentId}
+            </foreach>
+        </if>
+
+        <if test="param3!=null">
+            AND real_time > #{param3}
+        </if>
+        <if test="param4!=null">
+            AND real_time &lt; #{param4}
+        </if>
+        GROUP BY
+        device_id
+        ORDER BY
+        device_id
+    </select>
+    <!--查询组织列表的使用记录 正常、异常、警告数据-->
+    <select id="selectPieChartByOrgAndDepartment" resultType="com.yunxi.stamper.entityVo.StatusEntity">
+        SELECT
+        error,
+        count(1) AS `value`
+        FROM
+        seal_record_info
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        AND `error` IN (-1,0,1)
+        <if test="param2!=null and param2.size>0">
+            AND depart_id IN
+            <foreach collection="param2" open="(" separator="," close=")" item="departmentId">
+                #{departmentId}
+            </foreach>
+        </if>
+        <if test="param3!=null">
+            AND real_time > #{param3}
+        </if>
+        <if test="param4!=null">
+            AND real_time &lt; #{param4}
+        </if>
+        GROUP BY
+        error
+    </select>
+    <!--查询用户使用指定印章记录总数量-->
+    <select id="selectCountByOrgAndUserAndSignetName" resultType="java.lang.Integer">
+        SELECT
+        	count(1)
+        FROM
+        	seal_record_info sri
+        LEFT JOIN signet s ON sri.device_id = s.id
+        WHERE
+        	sri.delete_date IS NULL
+        AND sri.org_id = #{param1}
+        AND sri.user_id = #{param2}
+        <if test="param3!=null and param3!=''">
+            <bind name="param3" value="'%' + param3 + '%'" />
+            AND (
+            	s.`name` LIKE #{param3}
+            	OR sri.device_name LIKE #{param3}
+            )
+        </if>
+    </select>
+    <!--查询用户使用记录-->
+    <select id="selectInfoListByKeyword" resultType="com.yunxi.stamper.entityVo.InfoEntity">
+        SELECT
+        sri.id,
+        app.id AS `applicationId`,
+        sri.create_date,
+        sri.real_time,
+        s.id AS `deviceId`,
+        s.`name` AS `deviceName`,
+        sri.error,
+        sri.type,
+        sri.location,
+        sri.use_count,
+        sri.user_id,
+        sri.user_name
+        FROM
+        seal_record_info sri
+        LEFT JOIN signet s ON sri.device_id = s.id
+        LEFT JOIN application app ON sri.application_id = app.id
+        WHERE
+        sri.delete_date IS NULL
+        AND sri.org_id = #{param1}
+        <if test="param2!=null">
+            AND sri.user_id = #{param2}
+        </if>
+        <if test="param3!=null">
+            AND sri.real_time > #{param3}
+        </if>
+        <if test="param4!=null">
+            AND sri.real_time &lt; #{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            <bind name="param5" value="'%' + param5 + '%'" />
+            AND (sri.device_name LIKE #{param5} OR s.`name` LIKE #{param5})
+        </if>
+        <if test="param6!=null and param6!=''">
+            <bind name="param6" value="'%' + param6 + '%'" />
+            AND app.title LIKE #{param6}
+        </if>
+        <if test="param7!=null">
+            AND sri.error = #{param7}
+        </if>
+        <if test="param8!=null">
+            AND sri.type = #{param8}
+        </if>
+        <if test="param9!=null">
+            AND s.type_id = #{param9}
+        </if>
+        GROUP BY
+        sri.id
+        ORDER BY
+        sri.real_time DESC,sri.use_count DESC
+    </select>
+    <!--查询申请单的使用记录ID列表-->
+    <select id="selectIdsByApplication" resultType="java.lang.Integer">
+        SELECT
+        	id
+        FROM
+        	seal_record_info
+        WHERE
+        	delete_date IS NULL
+        AND application_id = #{_parameter}
+    </select>
+
+    <resultMap id="infoEntityFroApp" type="com.yunxi.stamper.entityVo.SealRecordInfoEntityApp">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="realTime" property="realTime" jdbcType="INTEGER"/>
+        <result column="userName" property="userName" jdbcType="VARCHAR"/>
+        <result column="deviceId" property="deviceId" jdbcType="INTEGER"/>
+        <result column="deviceName" property="deviceName" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="useCount" property="useCount" jdbcType="INTEGER"/>
+        <result column="error" property="error" jdbcType="INTEGER"/>
+        <result column="location" property="location" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectInfoBySignet" resultType="com.yunxi.stamper.entityVo.SealRecordInfoEntity">
+        SELECT
+	        *
+        FROM
+        	seal_record_info sri
+        WHERE
+        	sri.delete_date IS NULL
+        AND sri.org_id = #{param1}
+        AND sri.device_id = #{param2}
+        GROUP BY sri.id
+        ORDER BY sri.use_count DESC,sri.real_time DESC
+    </select>
+    <select id="selectInfoList" resultType="com.yunxi.stamper.entityVo.InfoEntity">
+        SELECT
+        sri.id,
+        app.id AS `applicationId`,
+        sri.create_date,
+        sri.real_time,
+        s.id AS `deviceId`,
+        s.`name` AS `deviceName`,
+        sri.error,
+        sri.type,
+        sri.location,
+        sri.use_count,
+        sri.user_id,
+        sri.user_name
+        FROM
+        seal_record_info sri
+        LEFT JOIN signet s ON sri.device_id = s.id
+        LEFT JOIN application app ON sri.application_id = app.id
+        WHERE
+        sri.org_id = #{param1}
+        <if test="param2 != null">
+            AND sri.real_time > #{param2}
+        </if>
+        <if test="param3 != null">
+            AND sri.real_time &lt; #{param3}
+        </if>
+        <if test="param9 !=null">
+            AND sri.user_id = #{param9}
+        </if>
+        <if test="param4 != null and param4 != ''">
+            <bind name="param4" value="'%' + param4 + '%'" />
+            AND (
+            s.id LIKE #{param4}
+            OR s.`name` LIKE #{param4}
+            OR s.uuid LIKE #{param4}
+            OR s.iccid LIKE #{param4}
+            OR s.sim_num LIKE #{param4}
+            )
+        </if>
+        <if test="param5 != null and param5 != ''">
+            <bind name="param5" value="'%' + param5 + '%'" />
+            AND app.title LIKE #{param5}
+        </if>
+        <if test="param6 != null">
+            AND sri.error = #{param6}
+        </if>
+        <if test="param7 != null">
+            AND sri.type = #{param7}
+        </if>
+        <if test="param8 != null">
+            AND s.type_id = #{param8}
+        </if>
+        GROUP BY sri.id
+        ORDER BY sri.real_time DESC
+    </select>
+    <select id="selectReportList" resultType="com.yunxi.stamper.entity.SealRecordInfo">
+        SELECT
+        info.*
+        FROM
+        seal_record_info info
+        WHERE
+        info.delete_date IS NULL
+        AND info.org_id = #{param1}
+        <if test="param2!=null and param2.size > 0">
+            AND info.device_id IN
+            <foreach collection="param2" separator="," item="deviceId" close=")" open="(">
+                #{deviceId}
+            </foreach>
+        </if>
+        <if test="param3!=null and param3.size > 0">
+            AND info.application_id IN
+            <foreach collection="param3" separator="," item="applicationId" close=")" open="(">
+                #{applicationId}
+            </foreach>
+        </if>
+        <if test="param4!=null">
+            AND info.real_time > #{param4}
+        </if>
+        <if test="param5!=null">
+            AND info.real_time &lt; #{param5}
+        </if>
+        ORDER BY
+        info.real_time DESC,
+        info.use_count DESC
+    </select>
+    <select id="selectUsedIdList" resultType="com.yunxi.stamper.entity.SealRecordInfo">
+        SELECT
+        device_id,
+        device_name
+        FROM
+        seal_record_info
+        WHERE
+        delete_date IS NULL
+        AND org_id = #{param1}
+        <if test="param2!=null and parma2!=''">
+            AND device_name like #{param2}
+        </if>
+        GROUP BY
+        device_id
+    </select>
+    <select id="selectReportList2" resultType="com.yunxi.stamper.entity.SealRecordInfo">
+        SELECT
+        info.*
+        FROM
+        seal_record_info info
+        <if test="param3 != null">
+            <if test="param3.contains(0)">
+                LEFT JOIN application app ON info.application_id = app.id
+            </if>
+            <if test="param3.contains(1)">
+                LEFT JOIN application_manager manager ON info.application_id = manager.application_id
+            </if>
+            <if test="param3.contains(2)">
+                LEFT JOIN application_auditor auditor ON info.application_id = auditor.application_id
+            </if>
+            <if test="param3.contains(3)">
+                LEFT JOIN application_keeper keeper ON info.application_id = keeper.application_id
+            </if>
+        </if>
+        WHERE
+        info.delete_date IS NULL
+        AND info.org_id = #{param1}
+        <if test="param3 != null">
+            <if test="param3.contains(0)">
+                AND app.delete_date IS NULL
+                AND app.org_id = #{param1}
+            </if>
+            <if test="param3.contains(1)">
+                AND manager.delete_date IS NULL
+                AND manager.org_id = #{param1}
+            </if>
+            <if test="param3.contains(2)">
+                AND auditor.delete_date IS NULL
+                AND auditor.org_id = #{param1}
+            </if>
+            <if test="param3.contains(3)">
+                AND keeper.delete_date IS NULL
+                AND keeper.org_id = #{param1}
+            </if>
+        </if>
+        <if test="param2 != null and param2.size > 0">
+            AND info.device_id IN
+            <foreach collection="param2" separator="," item="deviceId" close=")" open="(">
+                #{deviceId}
+            </foreach>
+        </if>
+        <if test="param3 != null and param3.size > 0 and param4 != null and param4.size > 0">
+            AND (
+            <trim prefixOverrides="OR">
+                <if test="param3.contains(0)">
+                    OR app.user_id IN
+                    <foreach collection="param4" separator="," item="userId" close=")" open="(">
+                        #{userId}
+                    </foreach>
+                </if>
+                <if test="param3.contains(1)">
+                    OR manager.manager_id IN
+                    <foreach collection="param4" separator="," item="userId" close=")" open="(">
+                        #{userId}
+                    </foreach>
+                </if>
+                <if test="param3.contains(2)">
+                    OR auditor.auditor_id IN
+                    <foreach collection="param4" separator="," item="userId" close=")" open="(">
+                        #{userId}
+                    </foreach>
+                </if>
+                <if test="param3.contains(3)">
+                    OR keeper.keeper_id IN
+                    <foreach collection="param4" separator="," item="userId" close=")" open="(">
+                        #{userId}
+                    </foreach>
+                </if>
+                <if test="param3.contains(4)">
+                    OR info.user_id IN
+                    <foreach collection="param4" separator="," item="userId" close=")" open="(">
+                        #{userId}
+                    </foreach>
+                </if>
+            </trim>
+            )
+        </if>
+        <if test="param5 != null">
+            AND info.real_time > #{param5}
+        </if>
+        <if test="param6 != null">
+            AND info.real_time &lt; #{param6}
+        </if>
+        GROUP BY
+        info.id
+        ORDER BY
+        info.real_time,
+        info.use_count
+    </select>
+</mapper>

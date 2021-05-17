@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ConfigTempMapper" >
+  <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.ConfigTemp" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="config_url" property="configUrl" jdbcType="VARCHAR" />
+    <result column="service_url" property="serviceUrl" jdbcType="VARCHAR" />
+    <result column="third_url" property="thirdUrl" jdbcType="VARCHAR" />
+    <result column="seal_record_info_normal_url" property="sealRecordInfoNormalUrl" jdbcType="VARCHAR" />
+    <result column="seal_record_info_auditor_url" property="sealRecordInfoAuditorUrl" jdbcType="VARCHAR" />
+    <result column="seal_record_info_easy_url" property="sealRecordInfoEasyUrl" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="type" property="type" jdbcType="INTEGER" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+</mapper>

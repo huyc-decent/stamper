@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunxi.stamper.mapper.ReportMapper">
+    <resultMap id="BaseResultMap" type="com.yunxi.stamper.entity.Report">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="org_id" property="orgId" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="restrict" property="restrict" jdbcType="VARCHAR"/>
+        <result column="error" property="error" jdbcType="VARCHAR"/>
+        <result column="file_name" property="fileName" jdbcType="VARCHAR"/>
+        <result column="host" property="host" jdbcType="VARCHAR"/>
+        <result column="relative_path" property="relativePath" jdbcType="VARCHAR"/>
+        <result column="absolute_path" property="absolutePath" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="delete_date" property="deleteDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <!--查询用户的报表记录-->
+    <select id="selectReportEntitiesByUser" resultType="com.yunxi.stamper.entityVo.ReportEntity">
+        SELECT
+        	id,
+        	create_date,
+        	file_name,
+        	`status`,
+            `host`,
+            relative_path AS "fileUrl"
+        FROM
+        	report
+        WHERE
+        	delete_date IS NULL
+        AND user_id = #{_parameter}
+        ORDER BY create_date DESC
+    </select>
+</mapper>
